@@ -2,14 +2,20 @@
 import "dart:io";
 
 class Product {
-  String? name, description;
-  double? price;
+  String _name;
+  String _description;
+  double _price;
 
-  Product(String? name, String? description, double? price) {
-    this.name = name;
-    this.description = description;
-    this.price = price;
-  }
+  Product(this._name, this._description, this._price);
+
+  String get name => _name;
+  set name(String value) => _name = value;
+
+  String get description => _description;
+  set description(String value) => _description = value;
+
+  double get price => _price;
+  set price(double value) => _price = value;
 
   void display(var i) {
     print("Details for product $i");
