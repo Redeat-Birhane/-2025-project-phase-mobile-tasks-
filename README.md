@@ -14,6 +14,16 @@ A simple command-line simulation of an eCommerce backend system.
 - Product includes name, description, and price
 - Error handling and input validation
 - Follows Dart OOP and naming conventions
+  
+  ### 2. Flutter UI Project
+A full-featured Flutter mobile app which demonstrates core Flutter concepts such as widget hierarchy, asset integration, and responsive layout building.
+
+**Features:**
+
+- Home screen layout built with Flutter widgets
+- Responsive UI design using Column, Row, Container, etc.
+- Asset integration (images, fonts)
+- Organized project structure following Flutter best practices
 
 **Run it:**
 ```bash
