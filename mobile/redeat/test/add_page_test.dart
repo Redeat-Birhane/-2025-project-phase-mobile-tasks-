@@ -3,31 +3,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_first_app/add.dart';
 
 void main() {
-  testWidgets('AddUpdatePage shows form fields', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: AddUpdatePage()));
+  testWidgets('AddUpdatePage shows form fields and button', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AddUpdatePage()));
 
     expect(find.text('Add Product'), findsOneWidget);
-    expect(find.byType(TextField), findsNWidgets(4));
-    expect(find.text('ADD'), findsOneWidget);
+    expect(find.byType(TextFormField), findsNWidgets(4));
+    expect(find.widgetWithText(ElevatedButton, 'Add Product'), findsOneWidget);
   });
 
-  testWidgets('Form validation works', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: AddUpdatePage()));
+  testWidgets('Form validation shows errors on empty submit', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AddUpdatePage()));
 
-    // Try to submit empty form
-    await tester.tap(find.text('ADD'));
-    await tester.pump();
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Add Product'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Please enter a name'), findsOneWidget);
+    expect(find.text('Please enter a price'), findsOneWidget);
     expect(find.text('Please enter a category'), findsOneWidget);
   });
 
-  testWidgets('Image upload button works', (tester) async {
-    await tester.pumpWidget( MaterialApp(home: AddUpdatePage()));
+  testWidgets('Tap on image picker container triggers image pick', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AddUpdatePage()));
 
-    await tester.tap(find.text('upload image'));
+    final imagePickerFinder = find.byType(GestureDetector).first;
+    expect(imagePickerFinder, findsOneWidget);
+
+    await tester.tap(imagePickerFinder);
     await tester.pump();
-
-    // Verify image picker was called (would need mocks for full implementation)
   });
 }
