@@ -5,8 +5,14 @@ import 'dart:io';
 class AddUpdatePage extends StatefulWidget {
   final Map<String, dynamic>? product;
   final Function(Map<String, dynamic>)? onSave;
+  final Function()? onDelete; // optional for future use
 
-  AddUpdatePage({this.product, this.onSave, Function()? onDelete});
+  const AddUpdatePage({
+    Key? key,
+    this.product,
+    this.onSave,
+    this.onDelete,
+  }) : super(key: key);
 
   @override
   _AddUpdatePageState createState() => _AddUpdatePageState();
@@ -22,7 +28,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   double _rating = 0;
   List<int> _sizes = [];
 
-  XFile? _pickedImage;  // <-- Add this to hold the picked image
+  XFile? _pickedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -35,9 +41,6 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
     _descriptionController = TextEditingController(text: product?['description'] ?? '');
     _rating = product?['rating'] ?? 0;
     _sizes = List<int>.from(product?['sizes'] ?? []);
-
-    // If editing and there's an image path, you might want to load it as _pickedImage
-    // but for simplicity we'll just keep it null here.
   }
 
   Future<void> _pickImage() async {
@@ -68,13 +71,12 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
         'rating': _rating,
         'description': _descriptionController.text.trim(),
         'sizes': _sizes,
-        'image': _pickedImage?.path ?? 'assets/images/shoe.jpg', // save picked image path or default
+        'image': _pickedImage?.path ?? widget.product?['image'] ?? 'assets/images/shoe.jpg',
       };
 
       if (widget.onSave != null) {
         widget.onSave!(productData);
       }
-      // DO NOT pop here; caller will pop.
     }
   }
 
@@ -93,7 +95,6 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
           key: _formKey,
           child: ListView(
             children: [
-              // Image preview and pick button
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
@@ -106,16 +107,19 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
                       image: FileImage(File(_pickedImage!.path)),
                       fit: BoxFit.cover,
                     )
-                        : widget.product != null && widget.product!['image'] != null
+                        : widget.product != null &&
+                        widget.product!['image'] != null
                         ? DecorationImage(
                       image: widget.product!['image'].toString().startsWith('assets/')
                           ? AssetImage(widget.product!['image'])
+                      as ImageProvider
                           : FileImage(File(widget.product!['image'])),
                       fit: BoxFit.cover,
                     )
                         : null,
                   ),
-                  child: _pickedImage == null && (widget.product == null || widget.product!['image'] == null)
+                  child: _pickedImage == null &&
+                      (widget.product == null || widget.product!['image'] == null)
                       ? Center(child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey[700]))
                       : null,
                 ),
@@ -128,25 +132,29 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
                 validator: (value) => (value == null || value.isEmpty) ? 'Please enter a name' : null,
               ),
               SizedBox(height: isMobile ? 12 : 16),
+
               TextFormField(
                 controller: _priceController,
                 decoration: InputDecoration(labelText: 'Price'),
                 validator: (value) => (value == null || value.isEmpty) ? 'Please enter a price' : null,
+                keyboardType: TextInputType.number,
               ),
               SizedBox(height: isMobile ? 12 : 16),
+
               TextFormField(
                 controller: _categoryController,
                 decoration: InputDecoration(labelText: 'Category'),
                 validator: (value) => (value == null || value.isEmpty) ? 'Please enter a category' : null,
               ),
               SizedBox(height: isMobile ? 12 : 16),
+
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(labelText: 'Description'),
                 maxLines: 3,
               ),
               SizedBox(height: isMobile ? 12 : 16),
-              // Add rating and sizes inputs here if you want
+
               ElevatedButton(
                 onPressed: _submit,
                 child: Text(widget.product == null ? 'Add Product' : 'Update Product'),

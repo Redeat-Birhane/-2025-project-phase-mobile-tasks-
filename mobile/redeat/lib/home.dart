@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'details.dart';
 import 'search.dart';
 import 'add.dart';
-import 'details.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,7 +13,7 @@ class _HomePageState extends State<HomePage> {
     {
       'id': '1',
       'name': 'Derby Leather Shoes',
-      'price': '\$120',
+      'price': 120.0,
       'category': "Men's shoe",
       'rating': 4.0,
       'image': 'assets/images/shoe.jpg',
@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
     {
       'id': '2',
       'name': 'Running Sneakers',
-      'price': '\$85',
+      'price': 85.0,
       'category': "Men's shoe",
       'rating': 4.5,
       'image': 'assets/images/shoe.jpg',
@@ -76,10 +76,7 @@ class _HomePageState extends State<HomePage> {
             IconButton(
               icon: Icon(Icons.search, size: isMobile ? 24 : 28),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SearchPage()),
-                );
+                Navigator.pushNamed(context, '/search');
               },
             ),
           ],
@@ -108,21 +105,19 @@ class _HomePageState extends State<HomePage> {
                   final product = products[index];
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailsPage(
-                            product: product,
-                            onDelete: () => _deleteProduct(product['id']),
-                          ),
-                        ),
+                        '/details',
+                        arguments: {
+                          'product': product,
+                          'onDelete': () => _deleteProduct(product['id']),
+                        },
                       ).then((updatedProduct) {
                         if (updatedProduct != null && updatedProduct is Map<String, dynamic>) {
                           _updateProduct(updatedProduct);
                         }
                       });
                     },
-
                     child: Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(
@@ -163,7 +158,7 @@ class _HomePageState extends State<HomePage> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      product['price'],
+                                      '\$${product['price']}',
                                       style: TextStyle(
                                         fontSize: isMobile ? 14 : 16,
                                         fontWeight: FontWeight.bold,
@@ -204,13 +199,12 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
+          Navigator.pushNamed(
             context,
-            MaterialPageRoute(
-              builder: (context) => AddUpdatePage(
-                onSave: _addProduct,
-              ),
-            ),
+            '/add',
+            arguments: {
+              'onSave': _addProduct,
+            },
           );
         },
         child: Icon(Icons.add, size: isMobile ? 24 : 28),

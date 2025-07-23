@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'add.dart';
 
 class DetailsPage extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -16,10 +15,8 @@ class DetailsPage extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    // Provide default values if product data is missing
     final category = product['category'] ?? "Product";
     final name = product['name'] ?? "Unnamed Product";
-    // Fix: format price as a string with dollar sign
     final price = '\$${product['price'] ?? 0}';
     final rating = product['rating']?.toString() ?? "0.0";
     final sizes = product['sizes'] is List ? product['sizes'] as List<int> : [39, 40, 41, 42];
@@ -148,18 +145,17 @@ class DetailsPage extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushNamed(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => AddUpdatePage(
-                              product: product,
-                              onSave: (updatedProduct) {
-                                Navigator.pop(context);       // Pop AddUpdatePage
-                                Navigator.pop(context, updatedProduct);  // Pop DetailsPage & return updated product
-                              },
-                              onDelete: onDelete,
-                            ),
-                          ),
+                          '/add',
+                          arguments: {
+                            'product': product,
+                            'onSave': (updatedProduct) {
+                              Navigator.pop(context); // Pop AddUpdatePage
+                              Navigator.pop(context, updatedProduct); // Pop DetailsPage
+                            },
+                            'onDelete': onDelete,
+                          },
                         );
                       },
                       child: Text('UPDATE'),
@@ -171,7 +167,6 @@ class DetailsPage extends StatelessWidget {
                         ),
                       ),
                     ),
-
                   ),
                 ],
               ),
