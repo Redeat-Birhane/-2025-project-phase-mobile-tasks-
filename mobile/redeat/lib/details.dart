@@ -5,22 +5,22 @@ class DetailsPage extends StatelessWidget {
   final Function()? onDelete;
 
   const DetailsPage({
-    Key? key,
+    super.key,
     required this.product,
     this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    final category = product['category'] ?? "Product";
-    final name = product['name'] ?? "Unnamed Product";
+    final category = product['category'] ?? 'Product';
+    final name = product['name'] ?? 'Unnamed Product';
     final price = '\$${product['price'] ?? 0}';
-    final rating = product['rating']?.toString() ?? "0.0";
+    final rating = product['rating']?.toString() ?? '0.0';
     final sizes = product['sizes'] is List ? product['sizes'] as List<int> : [39, 40, 41, 42];
-    final description = product['description'] ?? "No description available";
+    final description = product['description'] ?? 'No description available';
     final image = product['image'] ?? 'assets/images/shoe.jpg';
 
     return Scaffold(
@@ -48,7 +48,7 @@ class DetailsPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: isMobile ? 20 : 24),
+              const SizedBox(height: 24),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -63,7 +63,7 @@ class DetailsPage extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.star, color: Colors.amber),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
                         '($rating)',
                         style: TextStyle(fontSize: isMobile ? 16 : 18),
@@ -72,7 +72,7 @@ class DetailsPage extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              const SizedBox(height: 16),
 
               Text(
                 name,
@@ -81,7 +81,8 @@ class DetailsPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
+
               Text(
                 price,
                 style: TextStyle(
@@ -90,7 +91,7 @@ class DetailsPage extends StatelessWidget {
                   color: Colors.blue,
                 ),
               ),
-              SizedBox(height: isMobile ? 16 : 24),
+              const SizedBox(height: 24),
 
               Text(
                 'Size:',
@@ -99,19 +100,24 @@ class DetailsPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
+
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: sizes.map<Widget>((size) => Chip(
-                  label: Text(size.toString()),
-                  backgroundColor: Colors.grey[200],
-                  shape: StadiumBorder(
-                    side: BorderSide(color: Colors.grey),
+                children: sizes
+                    .map<Widget>(
+                      (size) => Chip(
+                    label: Text(size.toString()),
+                    backgroundColor: Colors.grey[200],
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: Colors.grey),
+                    ),
                   ),
-                )).toList(),
+                )
+                    .toList(),
               ),
-              SizedBox(height: isMobile ? 24 : 32),
+              const SizedBox(height: 32),
 
               Text(
                 description,
@@ -121,27 +127,28 @@ class DetailsPage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.justify,
               ),
-              SizedBox(height: isMobile ? 24 : 32),
+              const SizedBox(height: 32),
 
               Row(
                 children: [
-                  if (onDelete != null) Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _showDeleteConfirmation(context),
-                      child: Text(
-                        'DELETE',
-                        style: TextStyle(fontSize: isMobile ? 14 : 16),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  if (onDelete != null)
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _showDeleteConfirmation(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'DELETE',
+                          style: TextStyle(fontSize: isMobile ? 14 : 16),
                         ),
                       ),
                     ),
-                  ),
-                  if (onDelete != null) SizedBox(width: isMobile ? 16 : 24),
+                  if (onDelete != null) const SizedBox(width: 24),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -158,7 +165,6 @@ class DetailsPage extends StatelessWidget {
                           },
                         );
                       },
-                      child: Text('UPDATE'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
@@ -166,6 +172,7 @@ class DetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+                      child: const Text('UPDATE'),
                     ),
                   ),
                 ],
@@ -195,7 +202,10 @@ class DetailsPage extends StatelessWidget {
                 onDelete?.call();
                 Navigator.of(context).pop();
               },
-              child: const Text('DELETE', style: TextStyle(color: Colors.red)),
+              child: const Text(
+                'DELETE',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );

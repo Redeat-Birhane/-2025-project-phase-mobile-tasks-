@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'details.dart';
-import 'search.dart';
-import 'add.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> products = [
+  final List<Map<String, dynamic>> products = [
     {
       'id': '1',
       'name': 'Derby Leather Shoes',
@@ -39,12 +38,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updateProduct(Map<String, dynamic> updatedProduct) {
-    setState(() {
-      final index = products.indexWhere((p) => p['id'] == updatedProduct['id']);
-      if (index != -1) {
+    final index = products.indexWhere((p) => p['id'] == updatedProduct['id']);
+    if (index != -1) {
+      setState(() {
         products[index] = updatedProduct;
-      }
-    });
+      });
+    }
   }
 
   void _deleteProduct(String productId) {
@@ -66,10 +65,16 @@ class _HomePageState extends State<HomePage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('July 14, 2023', style: TextStyle(fontSize: isMobile ? 12 : 14)),
+                Text(
+                  'July 14, 2023',
+                  style: TextStyle(fontSize: isMobile ? 12 : 14),
+                ),
                 Text(
                   'Hello, Yohannes',
-                  style: TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: isMobile ? 16 : 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -89,7 +94,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             Text(
               'Available Products',
-              style: TextStyle(fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: isMobile ? 18 : 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: isMobile ? 12 : 20),
             Expanded(
@@ -113,7 +121,8 @@ class _HomePageState extends State<HomePage> {
                           'onDelete': () => _deleteProduct(product['id']),
                         },
                       ).then((updatedProduct) {
-                        if (updatedProduct != null && updatedProduct is Map<String, dynamic>) {
+                        if (updatedProduct != null &&
+                            updatedProduct is Map<String, dynamic>) {
                           _updateProduct(updatedProduct);
                         }
                       });
@@ -130,7 +139,9 @@ class _HomePageState extends State<HomePage> {
                             child: Hero(
                               tag: 'product-${product['id']}',
                               child: ClipRRect(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(12),
+                                ),
                                 child: Image.asset(
                                   product['image'],
                                   fit: BoxFit.cover,
@@ -146,16 +157,17 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Text(
                                   product['name'],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: isMobile ? 16 : 18,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       '\$${product['price']}',
@@ -167,16 +179,22 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     Row(
                                       children: [
-                                        Icon(Icons.star, color: Colors.amber, size: isMobile ? 14 : 16),
+                                        Icon(
+                                          Icons.star,
+                                          color: Colors.amber,
+                                          size: isMobile ? 14 : 16,
+                                        ),
                                         Text(
                                           '(${product['rating']})',
-                                          style: TextStyle(fontSize: isMobile ? 12 : 14),
+                                          style: TextStyle(
+                                            fontSize: isMobile ? 12 : 14,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   product['category'],
                                   style: TextStyle(
@@ -207,9 +225,9 @@ class _HomePageState extends State<HomePage> {
             },
           );
         },
-        child: Icon(Icons.add, size: isMobile ? 24 : 28),
         backgroundColor: Colors.blue,
         tooltip: 'Add Product',
+        child: Icon(Icons.add, size: isMobile ? 24 : 28),
       ),
       floatingActionButtonLocation: isMobile
           ? FloatingActionButtonLocation.centerFloat

@@ -1,6 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class AddUpdatePage extends StatefulWidget {
   final Map<String, dynamic>? product;
@@ -8,22 +9,22 @@ class AddUpdatePage extends StatefulWidget {
   final Function()? onDelete; // optional for future use
 
   const AddUpdatePage({
-    Key? key,
+    super.key,
     this.product,
     this.onSave,
     this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
-  _AddUpdatePageState createState() => _AddUpdatePageState();
+  State<AddUpdatePage> createState() => _AddUpdatePageState();
 }
 
 class _AddUpdatePageState extends State<AddUpdatePage> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _priceController;
-  late TextEditingController _categoryController;
-  late TextEditingController _descriptionController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _priceController;
+  late final TextEditingController _categoryController;
+  late final TextEditingController _descriptionController;
 
   double _rating = 0;
   List<int> _sizes = [];
@@ -74,9 +75,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
         'image': _pickedImage?.path ?? widget.product?['image'] ?? 'assets/images/shoe.jpg',
       };
 
-      if (widget.onSave != null) {
-        widget.onSave!(productData);
-      }
+      widget.onSave?.call(productData);
     }
   }
 
@@ -120,47 +119,53 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
                   ),
                   child: _pickedImage == null &&
                       (widget.product == null || widget.product!['image'] == null)
-                      ? Center(child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey[700]))
+                      ? Center(
+                    child: Icon(
+                      Icons.add_a_photo,
+                      size: 50,
+                      color: Colors.grey[700],
+                    ),
+                  )
                       : null,
                 ),
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              const SizedBox(height: 16),
 
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Product Name'),
+                decoration: const InputDecoration(labelText: 'Product Name'),
                 validator: (value) => (value == null || value.isEmpty) ? 'Please enter a name' : null,
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              const SizedBox(height: 16),
 
               TextFormField(
                 controller: _priceController,
-                decoration: InputDecoration(labelText: 'Price'),
+                decoration: const InputDecoration(labelText: 'Price'),
                 validator: (value) => (value == null || value.isEmpty) ? 'Please enter a price' : null,
                 keyboardType: TextInputType.number,
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              const SizedBox(height: 16),
 
               TextFormField(
                 controller: _categoryController,
-                decoration: InputDecoration(labelText: 'Category'),
+                decoration: const InputDecoration(labelText: 'Category'),
                 validator: (value) => (value == null || value.isEmpty) ? 'Please enter a category' : null,
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              const SizedBox(height: 16),
 
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 3,
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              const SizedBox(height: 16),
 
               ElevatedButton(
                 onPressed: _submit,
-                child: Text(widget.product == null ? 'Add Product' : 'Update Product'),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: isMobile ? 14 : 16),
                 ),
+                child: Text(widget.product == null ? 'Add Product' : 'Update Product'),
               ),
             ],
           ),

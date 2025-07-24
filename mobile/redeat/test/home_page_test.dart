@@ -5,7 +5,7 @@ import 'package:my_first_app/search.dart';
 
 void main() {
   testWidgets('HomePage renders header correctly', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: HomePage()));
+    await tester.pumpWidget(const MaterialApp(home: HomePage()));
 
     expect(find.text('Hello, Yohannes'), findsOneWidget);
     expect(find.text('Available Products'), findsOneWidget);
@@ -13,7 +13,7 @@ void main() {
   });
 
   testWidgets('HomePage displays product list', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: HomePage()));
+    await tester.pumpWidget(const MaterialApp(home: HomePage()));
 
     expect(find.byType(ListView), findsOneWidget);
     expect(find.text('Derby Leather Shoes'), findsWidgets);
@@ -22,9 +22,9 @@ void main() {
 
   testWidgets('Search icon navigates to search page', (tester) async {
     await tester.pumpWidget(MaterialApp(
-      home: HomePage(),
+      home: const HomePage(),
       routes: {
-        '/search': (context) =>  SearchPage(),
+        '/search': (context) => const SearchPage(),
       },
     ));
 
@@ -34,3 +34,4 @@ void main() {
     expect(find.byType(SearchPage), findsOneWidget);
   });
 }
+
