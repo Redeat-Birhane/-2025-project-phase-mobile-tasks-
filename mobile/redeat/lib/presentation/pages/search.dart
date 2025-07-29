@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'details.dart';
+import 'package:my_first_app/domain/entities/product.dart';
+import 'package:my_first_app/domain/usecases/search_products.dart';
+import 'package:my_first_app/presentation/pages/details.dart';
+
+import '../../injection_container.dart';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final SearchProductsUseCase searchProductsUseCase;
+
+  const SearchPage({
+    super.key,
+    required this.searchProductsUseCase,
+  });
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -13,39 +22,18 @@ class _SearchPageState extends State<SearchPage> {
   String _selectedCategory = '';
   double _minPrice = 0;
   double _maxPrice = 200;
+  List<Product> _filteredProducts = [];
+  bool _isLoading = false;
+  bool _filtersApplied = false;
 
-  final List<Map<String, dynamic>> _allProducts = [
-    {
-      'name': 'Derby Leather Shoes',
-      'category': 'Leather',
-      'price': 120,
-      'description': 'Men\'s shoe',
-      'rating': 4.0,
-    },
-    {
-      'name': 'Classic Sneakers',
-      'category': 'Sneakers',
-      'price': 80,
-      'description': 'Casual sneaker',
-      'rating': 4.5,
-    },
-    {
-      'name': 'Formal Black Shoes',
-      'category': 'Formal',
-      'price': 150,
-      'description': 'Perfect for office',
-      'rating': 4.2,
-    },
-    {
-      'name': 'Casual Loafers',
-      'category': 'Casual',
-      'price': 70,
-      'description': 'Comfortable everyday shoes',
-      'rating': 4.1,
-    },
+  final List<String> _categories = [
+    'Leather',
+    'Sneakers',
+    'Formal',
+    'Casual',
+    'Sports',
+    'Sandals'
   ];
-
-  List<Map<String, dynamic>> _filteredProducts = [];
 
   @override
   void initState() {
@@ -53,22 +41,35 @@ class _SearchPageState extends State<SearchPage> {
     _filteredProducts = [];
   }
 
-  void _applyFilters() {
-    final query = _searchController.text.toLowerCase();
+  Future<void> _searchProducts() async {
+    setState(() => _isLoading = true);
+    try {
+      final results = await widget.searchProductsUseCase(SearchParams(
+        query: _searchController.text,
+        category: _selectedCategory,
+        minPrice: _minPrice,
+        maxPrice: _maxPrice,
+      ));
+      setState(() {
+        _filteredProducts = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Search failed: $e')),
+      );
+    }
+  }
 
+  void _clearFilters() {
     setState(() {
-      _filteredProducts = _allProducts.where((product) {
-        final name = product['name'].toString().toLowerCase();
-        final category = product['category'].toString();
-        final price = product['price'] as num;
-
-        final matchesQuery = query.isEmpty || name.contains(query);
-        final matchesCategory = _selectedCategory.isEmpty ||
-            category.toLowerCase() == _selectedCategory.toLowerCase();
-        final matchesPrice = price >= _minPrice && price <= _maxPrice;
-
-        return matchesQuery && matchesCategory && matchesPrice;
-      }).toList();
+      _searchController.clear();
+      _selectedCategory = '';
+      _minPrice = 0;
+      _maxPrice = 200;
+      _filtersApplied = false;
+      _filteredProducts = [];
     });
   }
 
@@ -79,7 +80,7 @@ class _SearchPageState extends State<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Page'),
+        title: const Text('Search Products'),
         centerTitle: true,
       ),
       body: Padding(
@@ -95,11 +96,12 @@ class _SearchPageState extends State<SearchPage> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
-                  onPressed: () => _searchController.clear(),
+                  onPressed: _clearFilters,
                 ),
               ),
             ),
             SizedBox(height: isMobile ? 16 : 24),
+
             Text(
               'Category',
               style: TextStyle(
@@ -108,23 +110,29 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: ['Leather', 'Sneakers', 'Formal', 'Casual'].map((category) {
-                return ChoiceChip(
-                  label: Text(category),
-                  selected: _selectedCategory == category,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedCategory = selected ? category : '';
-                    });
-                  },
-                );
-              }).toList(),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _categories.map((category) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(category),
+                      selected: _selectedCategory == category,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedCategory = selected ? category : '';
+                        });
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
             SizedBox(height: isMobile ? 16 : 24),
+
             Text(
-              'Price',
+              'Price Range: \$${_minPrice.toInt()} - \$${_maxPrice.toInt()}',
               style: TextStyle(
                 fontSize: isMobile ? 16 : 18,
                 fontWeight: FontWeight.bold,
@@ -148,31 +156,49 @@ class _SearchPageState extends State<SearchPage> {
               },
             ),
             SizedBox(height: isMobile ? 16 : 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _applyFilters,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: isMobile ? 14 : 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _searchProducts,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('APPLY FILTERS'),
                   ),
                 ),
-                child: const Text('APPLY'),
-              ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: _clearFilters,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[300],
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('CLEAR', style: TextStyle(color: Colors.black)),
+                ),
+              ],
             ),
             SizedBox(height: isMobile ? 16 : 24),
-            Text(
-              'Results (${_filteredProducts.length})',
-              style: TextStyle(
-                fontSize: isMobile ? 18 : 20,
-                fontWeight: FontWeight.bold,
+
+            if (_filtersApplied) ...[
+              Text(
+                'Results (${_filteredProducts.length})',
+                style: TextStyle(
+                  fontSize: isMobile ? 18 : 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: isMobile ? 12 : 16),
+              SizedBox(height: isMobile ? 12 : 16),
+            ],
+
             Expanded(
-              child: _filteredProducts.isEmpty
-                  ? const Center(child: Text('No products found'))
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredProducts.isEmpty && _filtersApplied
+                  ? const Center(child: Text('No products found matching your criteria'))
+                  : _filteredProducts.isEmpty
+                  ? const Center(child: Text('Apply filters to see results'))
                   : ListView.builder(
                 itemCount: _filteredProducts.length,
                 itemBuilder: (context, index) {
@@ -196,7 +222,7 @@ class _SearchPageState extends State<SearchPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              product['name'],
+                              product.name,
                               style: TextStyle(
                                 fontSize: isMobile ? 18 : 20,
                                 fontWeight: FontWeight.bold,
@@ -204,14 +230,19 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             const SizedBox(height: 8),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('\$${product['price']}'),
-                                Text(product['description']),
+                                Text('\$${product.price}'),
+                                Text(product.category),
                                 Row(
                                   children: [
-                                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                                    Text('(${product['rating']})'),
+                                    const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                    Text('(${product.rating})'),
                                   ],
                                 ),
                               ],

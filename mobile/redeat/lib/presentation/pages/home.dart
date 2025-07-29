@@ -1,54 +1,96 @@
 import 'package:flutter/material.dart';
+import 'package:my_first_app/domain/entities/product.dart';
+import 'package:my_first_app/domain/usecases/create_product.dart';
+import 'package:my_first_app/domain/usecases/delete_product.dart';
+import 'package:my_first_app/domain/usecases/view_all_products.dart';
+import 'package:my_first_app/domain/usecases/view_product.dart';
+import 'package:my_first_app/presentation/pages/add.dart';
+import 'package:my_first_app/presentation/pages/details.dart';
+import 'package:my_first_app/presentation/pages/search.dart';
+
+import '../../domain/usecases/update_product.dart';
+import '../../domain/usecases/usecase.dart';
+import '../../injection_container.dart';
+import 'main.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final ViewAllProductsUseCase viewAllProductsUseCase;
+  final DeleteProductUseCase deleteProductUseCase;
+
+  const HomePage({
+    super.key,
+    required this.viewAllProductsUseCase,
+    required this.deleteProductUseCase,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Map<String, dynamic>> products = [
-    {
-      'id': '1',
-      'name': 'Derby Leather Shoes',
-      'price': 120.0,
-      'category': "Men's shoe",
-      'rating': 4.0,
-      'image': 'assets/images/shoe.jpg',
-      'description': 'Classic derby shoes made from premium leather...',
-      'sizes': [39, 40, 41, 42, 43, 44],
-    },
-    {
-      'id': '2',
-      'name': 'Running Sneakers',
-      'price': 85.0,
-      'category': "Men's shoe",
-      'rating': 4.5,
-      'image': 'assets/images/shoe.jpg',
-      'description': 'Lightweight running shoes with cushion technology...',
-      'sizes': [40, 41, 42, 43],
-    },
-  ];
+  List<Product> products = [];
+  bool isLoading = true;
 
-  void _addProduct(Map<String, dynamic> newProduct) {
-    setState(() {
-      products.add(newProduct);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
   }
 
-  void _updateProduct(Map<String, dynamic> updatedProduct) {
-    final index = products.indexWhere((p) => p['id'] == updatedProduct['id']);
-    if (index != -1) {
+  Future<void> _loadProducts() async {
+    setState(() => isLoading = true);
+    try {
+      final loadedProducts = await widget.viewAllProductsUseCase(NoParams());
       setState(() {
-        products[index] = updatedProduct;
+        products = loadedProducts;
+        isLoading = false;
       });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load products: $e')),
+      );
     }
   }
 
+  void _addProduct(Product newProduct) {
+    final createUseCase = createProductUseCase;
+    createUseCase(newProduct).then((_) {
+      _loadProducts();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product added successfully')),
+      );
+    }).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add product: $e')),
+      );
+    });
+  }
+
+  void _updateProduct(Product updatedProduct) {
+    final updateUseCase = updateProductUseCase;
+    updateUseCase(updatedProduct).then((_) {
+      _loadProducts();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product updated successfully')),
+      );
+    }).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update product: $e')),
+      );
+    });
+  }
+
   void _deleteProduct(String productId) {
-    setState(() {
-      products.removeWhere((p) => p['id'] == productId);
+    widget.deleteProductUseCase(productId).then((_) {
+      _loadProducts();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product deleted successfully')),
+      );
+    }).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete product: $e')),
+      );
     });
   }
 
@@ -101,7 +143,11 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: isMobile ? 12 : 20),
             Expanded(
-              child: GridView.builder(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : products.isEmpty
+                  ? const Center(child: Text('No products available'))
+                  : GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isMobile ? 1 : 2,
                   childAspectRatio: isMobile ? 1.5 : 1.8,
@@ -118,11 +164,10 @@ class _HomePageState extends State<HomePage> {
                         '/details',
                         arguments: {
                           'product': product,
-                          'onDelete': () => _deleteProduct(product['id']),
+                          'onDelete': () => _deleteProduct(product.id),
                         },
                       ).then((updatedProduct) {
-                        if (updatedProduct != null &&
-                            updatedProduct is Map<String, dynamic>) {
+                        if (updatedProduct != null && updatedProduct is Product) {
                           _updateProduct(updatedProduct);
                         }
                       });
@@ -137,13 +182,13 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Expanded(
                             child: Hero(
-                              tag: 'product-${product['id']}',
+                              tag: 'product-${product.id}',
                               child: ClipRRect(
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(12),
                                 ),
                                 child: Image.asset(
-                                  product['image'],
+                                  product.imageUrl,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                 ),
@@ -156,7 +201,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  product['name'],
+                                  product.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -170,7 +215,7 @@ class _HomePageState extends State<HomePage> {
                                   MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      '\$${product['price']}',
+                                      '\$${product.price}',
                                       style: TextStyle(
                                         fontSize: isMobile ? 14 : 16,
                                         fontWeight: FontWeight.bold,
@@ -185,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                                           size: isMobile ? 14 : 16,
                                         ),
                                         Text(
-                                          '(${product['rating']})',
+                                          '(${product.rating})',
                                           style: TextStyle(
                                             fontSize: isMobile ? 12 : 14,
                                           ),
@@ -196,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  product['category'],
+                                  product.category,
                                   style: TextStyle(
                                     fontSize: isMobile ? 12 : 14,
                                     color: Colors.grey[600],

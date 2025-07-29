@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:my_first_app/presentation/pages/add.dart';
+
+import '../../domain/entities/product.dart';
 
 class DetailsPage extends StatelessWidget {
-  final Map<String, dynamic> product;
+  final Product product;
   final Function()? onDelete;
 
   const DetailsPage({
@@ -15,14 +20,6 @@ class DetailsPage extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    final category = product['category'] ?? 'Product';
-    final name = product['name'] ?? 'Unnamed Product';
-    final price = '\$${product['price'] ?? 0}';
-    final rating = product['rating']?.toString() ?? '0.0';
-    final sizes = product['sizes'] is List ? product['sizes'] as List<int> : [39, 40, 41, 42];
-    final description = product['description'] ?? 'No description available';
-    final image = product['image'] ?? 'assets/images/shoe.jpg';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Product Details'),
@@ -35,14 +32,16 @@ class DetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Hero(
-                tag: 'product-${product['id'] ?? 'default'}',
+                tag: 'product-${product.id}',
                 child: Container(
                   height: isMobile ? 200 : 300,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
-                      image: AssetImage(image),
+                      image: product.imageUrl.startsWith('assets/')
+                          ? AssetImage(product.imageUrl)
+                          : FileImage(File(product.imageUrl)) as ImageProvider,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -54,7 +53,7 @@ class DetailsPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    category,
+                    product.category,
                     style: TextStyle(
                       fontSize: isMobile ? 20 : 24,
                       fontWeight: FontWeight.bold,
@@ -65,7 +64,7 @@ class DetailsPage extends StatelessWidget {
                       const Icon(Icons.star, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(
-                        '($rating)',
+                        '(${product.rating})',
                         style: TextStyle(fontSize: isMobile ? 16 : 18),
                       ),
                     ],
@@ -75,7 +74,7 @@ class DetailsPage extends StatelessWidget {
               const SizedBox(height: 16),
 
               Text(
-                name,
+                product.name,
                 style: TextStyle(
                   fontSize: isMobile ? 18 : 22,
                   fontWeight: FontWeight.bold,
@@ -84,7 +83,7 @@ class DetailsPage extends StatelessWidget {
               const SizedBox(height: 8),
 
               Text(
-                price,
+                '\$${product.price}',
                 style: TextStyle(
                   fontSize: isMobile ? 24 : 28,
                   fontWeight: FontWeight.bold,
@@ -105,7 +104,7 @@ class DetailsPage extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: sizes
+                children: product.sizes
                     .map<Widget>(
                       (size) => Chip(
                     label: Text(size.toString()),
@@ -120,7 +119,15 @@ class DetailsPage extends StatelessWidget {
               const SizedBox(height: 32),
 
               Text(
-                description,
+                'Description:',
+                style: TextStyle(
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                product.description,
                 style: TextStyle(
                   fontSize: isMobile ? 14 : 16,
                   height: 1.5,
@@ -137,7 +144,8 @@ class DetailsPage extends StatelessWidget {
                         onPressed: () => _showDeleteConfirmation(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
-                          padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
+                          padding: EdgeInsets.symmetric(
+                              vertical: isMobile ? 12 : 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -158,16 +166,16 @@ class DetailsPage extends StatelessWidget {
                           arguments: {
                             'product': product,
                             'onSave': (updatedProduct) {
-                              Navigator.pop(context); // Pop AddUpdatePage
-                              Navigator.pop(context, updatedProduct); // Pop DetailsPage
+                              Navigator.pop(context);
+                              Navigator.pop(context, updatedProduct);
                             },
-                            'onDelete': onDelete,
                           },
                         );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
-                        padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
+                        padding: EdgeInsets.symmetric(
+                            vertical: isMobile ? 12 : 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
