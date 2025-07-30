@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
-import '../../domain/usecases/view_all_products_usecase.dart';
+import '../../domain/usecases/get_product_usecase.dart';
 
 class DetailsPage extends StatelessWidget {
   final Product product;

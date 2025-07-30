@@ -2,12 +2,12 @@ import '../entities/product.dart';
 import '../repositories/product_repository.dart';
 
 
-class UpdateProductUsecase {
+class InsertProductUsecase {
   final ProductRepository repository;
 
-  UpdateProductUsecase(this.repository);
+  InsertProductUsecase(this.repository);
 
   Future<void> call(Product product) async {
-    await repository.updateProduct(product);
+    await repository.insertProduct(product);
   }
 }
