@@ -1,282 +1,142 @@
 import 'package:flutter/material.dart';
-import 'package:my_first_app/domain/entities/product.dart';
-import 'package:my_first_app/domain/usecases/create_product.dart';
-import 'package:my_first_app/domain/usecases/delete_product.dart';
-import 'package:my_first_app/domain/usecases/view_all_products.dart';
-import 'package:my_first_app/domain/usecases/view_product.dart';
-import 'package:my_first_app/presentation/pages/add.dart';
-import 'package:my_first_app/presentation/pages/details.dart';
-import 'package:my_first_app/presentation/pages/search.dart';
-
-import '../../domain/usecases/update_product.dart';
-import '../../domain/usecases/usecase.dart';
-import '../../injection_container.dart';
-import 'main.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/usecases/view_all_products_usecase.dart';
+import '../../domain/usecases/create_product_usecase.dart';
+import 'details.dart';
+import 'add.dart';
 
 class HomePage extends StatefulWidget {
-  final ViewAllProductsUseCase viewAllProductsUseCase;
-  final DeleteProductUseCase deleteProductUseCase;
-
-  const HomePage({
-    super.key,
-    required this.viewAllProductsUseCase,
-    required this.deleteProductUseCase,
-  });
-
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Product> products = [];
-  bool isLoading = true;
+  late final ViewAllProductsUsecase _viewAllProductsUsecase;
+  late final CreateProductUsecase _createProductUsecase;
+
+  List<Product> _products = [];
 
   @override
   void initState() {
     super.initState();
+
+    _viewAllProductsUsecase = ViewAllProductsUsecase();
+    _createProductUsecase = CreateProductUsecase(_viewAllProductsUsecase);
+
     _loadProducts();
   }
 
   Future<void> _loadProducts() async {
-    setState(() => isLoading = true);
-    try {
-      final loadedProducts = await widget.viewAllProductsUseCase(NoParams());
-      setState(() {
-        products = loadedProducts;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load products: $e')),
-      );
+    final products = await _viewAllProductsUsecase.call();
+    setState(() {
+      _products = products;
+    });
+  }
+
+  void _navigateToAdd() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddUpdatePage(),
+      ),
+    );
+
+    if (result is Product) {
+      await _createProductUsecase.call(result);
+      await _loadProducts(); // Refresh the list after adding
     }
   }
 
-  void _addProduct(Product newProduct) {
-    final createUseCase = createProductUseCase;
-    createUseCase(newProduct).then((_) {
-      _loadProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product added successfully')),
-      );
-    }).catchError((e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add product: $e')),
-      );
-    });
-  }
+  void _navigateToDetails(Product product) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailsPage(product: product),
+      ),
+    );
 
-  void _updateProduct(Product updatedProduct) {
-    final updateUseCase = updateProductUseCase;
-    updateUseCase(updatedProduct).then((_) {
-      _loadProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product updated successfully')),
-      );
-    }).catchError((e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update product: $e')),
-      );
-    });
-  }
-
-  void _deleteProduct(String productId) {
-    widget.deleteProductUseCase(productId).then((_) {
-      _loadProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product deleted successfully')),
-      );
-    }).catchError((e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete product: $e')),
-      );
-    });
+    if (result != null && result is Product) {
+      await _loadProducts(); // Refresh after update or delete
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'July 14, 2023',
-                  style: TextStyle(fontSize: isMobile ? 12 : 14),
-                ),
-                Text(
-                  'Hello, Yohannes',
-                  style: TextStyle(
-                    fontSize: isMobile ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            IconButton(
-              icon: Icon(Icons.search, size: isMobile ? 24 : 28),
-              onPressed: () {
-                Navigator.pushNamed(context, '/search');
-              },
-            ),
-          ],
-        ),
+        title: Text('Available Products'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Available Products',
-              style: TextStyle(
-                fontSize: isMobile ? 18 : 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: isMobile ? 12 : 20),
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : products.isEmpty
-                  ? const Center(child: Text('No products available'))
-                  : GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isMobile ? 1 : 2,
-                  childAspectRatio: isMobile ? 1.5 : 1.8,
-                  crossAxisSpacing: isMobile ? 8 : 16,
-                  mainAxisSpacing: isMobile ? 8 : 16,
-                ),
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/details',
-                        arguments: {
-                          'product': product,
-                          'onDelete': () => _deleteProduct(product.id),
-                        },
-                      ).then((updatedProduct) {
-                        if (updatedProduct != null && updatedProduct is Product) {
-                          _updateProduct(updatedProduct);
-                        }
-                      });
-                    },
-                    child: Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+      body: _products.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+        padding: EdgeInsets.all(isMobile ? 8 : 16),
+        child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isMobile ? 1 : 2,
+            childAspectRatio: isMobile ? 1.5 : 1.8,
+            crossAxisSpacing: isMobile ? 8 : 16,
+            mainAxisSpacing: isMobile ? 8 : 16,
+          ),
+          itemCount: _products.length,
+          itemBuilder: (context, index) {
+            final product = _products[index];
+            return GestureDetector(
+              onTap: () => _navigateToDetails(product),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Hero(
+                        tag: 'product-${product.id}',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(12)),
+                          child: Image.asset(
+                            product.imageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        ),
                       ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(isMobile ? 8 : 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Hero(
-                              tag: 'product-${product.id}',
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(12),
-                                ),
-                                child: Image.asset(
-                                  product.imageUrl,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
-                              ),
-                            ),
+                          Text(
+                            product.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: isMobile ? 16 : 18,
+                                fontWeight: FontWeight.bold),
                           ),
-                          Padding(
-                            padding: EdgeInsets.all(isMobile ? 8.0 : 12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 16 : 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '\$${product.price}',
-                                      style: TextStyle(
-                                        fontSize: isMobile ? 14 : 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.star,
-                                          color: Colors.amber,
-                                          size: isMobile ? 14 : 16,
-                                        ),
-                                        Text(
-                                          '(${product.rating})',
-                                          style: TextStyle(
-                                            fontSize: isMobile ? 12 : 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  product.category,
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 12 : 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          SizedBox(height: 4),
+                          Text('\$${product.price}',
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
-                    ),
-                  );
-                },
+                    )
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            '/add',
-            arguments: {
-              'onSave': _addProduct,
-            },
-          );
-        },
-        backgroundColor: Colors.blue,
-        tooltip: 'Add Product',
-        child: Icon(Icons.add, size: isMobile ? 24 : 28),
+        onPressed: _navigateToAdd,
+        child: Icon(Icons.add),
       ),
-      floatingActionButtonLocation: isMobile
-          ? FloatingActionButtonLocation.centerFloat
-          : FloatingActionButtonLocation.endFloat,
     );
   }
 }
