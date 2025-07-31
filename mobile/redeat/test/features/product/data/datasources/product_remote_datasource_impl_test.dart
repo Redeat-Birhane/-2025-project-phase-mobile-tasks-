@@ -1,24 +1,24 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_first_app/core/features/product/data/models/product_model.dart';
-import 'package:my_first_app/data/datasources/product_local_data_source.dart';
-import 'package:my_first_app/data/datasources/product_remote_data_source.dart';
-import 'package:my_first_app/data/repositories/product_repository_impl.dart';
-import 'package:my_first_app/domain/entities/product.dart';
-import 'package:my_first_app/core/network/network_info.dart';
+import 'package:my_first_app/data/datasources/product_local_data_source_impl.dart';
 
-
-class MockProductRemoteDataSource extends Mock implements ProductRemoteDataSource {}
-class MockProductLocalDataSource extends Mock implements ProductLocalDataSource {}
-class MockNetworkInfo extends Mock implements NetworkInfo {}
+class MockSharedPreferences extends Mock implements SharedPreferences {}
 
 void main() {
-  late ProductRepositoryImpl repository;
-  late MockProductRemoteDataSource mockRemoteDataSource;
-  late MockProductLocalDataSource mockLocalDataSource;
-  late MockNetworkInfo mockNetworkInfo;
+  late ProductLocalDataSourceImpl dataSource;
+  late MockSharedPreferences mockSharedPreferences;
 
-  final testProduct = ProductModel(
+  setUp(() {
+    mockSharedPreferences = MockSharedPreferences();
+    dataSource = ProductLocalDataSourceImpl(
+      sharedPreferences: mockSharedPreferences,
+    );
+  });
+
+  final productModel = ProductModel(
     id: '1',
     name: 'Test Product',
     description: 'Description',
@@ -26,64 +26,64 @@ void main() {
     imageUrl: 'http://test.com/image.png',
   );
 
-  setUp(() {
-    mockRemoteDataSource = MockProductRemoteDataSource();
-    mockLocalDataSource = MockProductLocalDataSource();
-    mockNetworkInfo = MockNetworkInfo();
+  final productList = [productModel];
+  final jsonString = json.encode(productList.map((product) => product.toJson()).toList());
 
-    repository = ProductRepositoryImpl(
-      remoteDataSource: mockRemoteDataSource,
-      localDataSource: mockLocalDataSource,
-      networkInfo: mockNetworkInfo,
-    );
-  });
+  group('getCachedProducts', () {
+    test('should return list of products from SharedPreferences', () async {
+      when(mockSharedPreferences.getString('CACHED_PRODUCTS')).thenReturn(jsonString);
 
-  group('getAllProducts', () {
-    test('should fetch from remote and cache locally when online', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
-      when(mockRemoteDataSource.fetchAllProducts()).thenAnswer((_) async => [testProduct]);
-      when(mockLocalDataSource.cacheProduct(testProduct)).thenAnswer((_) async => Future.value());
+      final result = await dataSource.getCachedProducts();
 
-      final result = await repository.getAllProducts();
-
-      expect(result, [testProduct]);
-      verify(mockRemoteDataSource.fetchAllProducts()).called(1);
-      verify(mockLocalDataSource.cacheProduct(testProduct)).called(1);
+      expect(result.length, 1);
+      expect(result.first.id, '1');
+      verify(mockSharedPreferences.getString('CACHED_PRODUCTS')).called(1);
     });
 
-    test('should fetch from local when offline', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => false);
-      when(mockLocalDataSource.getCachedProducts()).thenAnswer((_) async => [testProduct]);
+    test('should return empty list when no data is cached', () async {
+      when(mockSharedPreferences.getString('CACHED_PRODUCTS')).thenReturn(null);
 
-      final result = await repository.getAllProducts();
+      final result = await dataSource.getCachedProducts();
 
-      expect(result, [testProduct]);
-      verify(mockLocalDataSource.getCachedProducts()).called(1);
-      verifyNever(mockRemoteDataSource.fetchAllProducts());
+      expect(result, []);
+      verify(mockSharedPreferences.getString('CACHED_PRODUCTS')).called(1);
     });
   });
 
-  group('insertProduct', () {
-    test('should insert product when online', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
-      when(mockRemoteDataSource.addProduct(testProduct)).thenAnswer((_) async => Future.value());
-      when(mockLocalDataSource.cacheProduct(testProduct)).thenAnswer((_) async => Future.value());
+  group('cacheProduct', () {
+    test('should save product to SharedPreferences', () async {
+      when(mockSharedPreferences.getString('CACHED_PRODUCTS')).thenReturn(null);
+      final encoded = json.encode([productModel.toJson()]);
+      when(mockSharedPreferences.setString('CACHED_PRODUCTS', encoded)).thenAnswer((_) async => true);
 
-      await repository.insertProduct(testProduct);
+      await dataSource.cacheProduct(productModel);
 
-      verify(mockRemoteDataSource.addProduct(testProduct)).called(1);
-      verify(mockLocalDataSource.cacheProduct(testProduct)).called(1);
-    });
-
-    test('should throw exception when offline', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => false);
-
-      expect(() => repository.insertProduct(testProduct), throwsException);
-
-      verifyNever(mockRemoteDataSource.addProduct(testProduct));
-      verifyNever(mockLocalDataSource.cacheProduct(testProduct));
+      verify(mockSharedPreferences.setString('CACHED_PRODUCTS', encoded)).called(1);
     });
   });
 
+  group('updateCachedProduct', () {
+    test('should update product in cached list', () async {
+      final updatedProduct = productModel.copyWith(name: 'Updated Name');
+      final updatedJson = json.encode([updatedProduct.toJson()]);
 
+      when(mockSharedPreferences.getString('CACHED_PRODUCTS')).thenReturn(jsonString);
+      when(mockSharedPreferences.setString('CACHED_PRODUCTS', updatedJson)).thenAnswer((_) async => true);
+
+      await dataSource.updateCachedProduct(updatedProduct);
+
+      verify(mockSharedPreferences.setString('CACHED_PRODUCTS', updatedJson)).called(1);
+    });
+  });
+
+  group('removeCachedProduct', () {
+    test('should remove product from cached list', () async {
+      when(mockSharedPreferences.getString('CACHED_PRODUCTS')).thenReturn(jsonString);
+      when(mockSharedPreferences.setString('CACHED_PRODUCTS', '[]')).thenAnswer((_) async => true);
+
+      await dataSource.removeCachedProduct('1');
+
+      verify(mockSharedPreferences.setString('CACHED_PRODUCTS', '[]')).called(1);
+    });
+  });
 }
