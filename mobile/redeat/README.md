@@ -1,7 +1,10 @@
-## Local Data Source
+Remote Data Source
+This module handles fetching and managing product data from a remote API for the Ecommerce app.
 
-This project implements a local caching mechanism using `SharedPreferences` to store product data offline. When the device is offline, the app fetches products from the local cache to ensure a smooth user experience.
+Communicates with the backend API at https://g5-flutter-learning-path-be.onrender.com/api/v1.
 
-- Products are serialized and saved as JSON strings.
-- Supports caching, updating, and deleting products locally.
-- Improves app reliability during network interruptions.
+Supports fetching all products, fetching by ID, adding, updating, and deleting products.
+
+Uses HTTP requests with JSON serialization for data transfer.
+
+Ensures smooth integration between the app and remote server for real-time data access.
