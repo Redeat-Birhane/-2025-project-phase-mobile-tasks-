@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/product.dart';
-import 'package:my_first_app/domain/usecases/create_product_usecase.dart';
+import 'package:my_first_app/domain/usecases/insert_product_usecase.dart';
 import 'package:my_first_app/domain/usecases/update_product_usecase.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../domain/usecases/view_all_products_usecase.dart';
+import '../../domain/usecases/get_product_usecase.dart';
 
 class AddUpdatePage extends StatefulWidget {
   final Product? product;

@@ -1,13 +1,12 @@
-import 'package:my_first_app/domain/usecases/view_all_products_usecase.dart';
+
+import '../repositories/product_repository.dart';
 
 class DeleteProductUsecase {
-  final ViewAllProductsUsecase _viewAllProductsUsecase;
+  final ProductRepository repository;
 
-  DeleteProductUsecase(this._viewAllProductsUsecase);
+  DeleteProductUsecase(this.repository);
 
   Future<void> call(String id) async {
-    final products = _viewAllProductsUsecase.products;
-    products.removeWhere((p) => p.id == id);
-    await Future.delayed(Duration(milliseconds: 100));
+    await repository.deleteProduct(id);
   }
 }
