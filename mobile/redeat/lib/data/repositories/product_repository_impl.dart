@@ -2,22 +2,23 @@ import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../datasources/product_remote_data_source.dart';
 import '../datasources/product_local_data_source.dart';
-import '../../core/network/network_info.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductRemoteDataSource remoteDataSource;
   final ProductLocalDataSource localDataSource;
-  final NetworkInfo networkInfo;
+
+
+  final bool hasNetwork;
 
   ProductRepositoryImpl({
     required this.remoteDataSource,
     required this.localDataSource,
-    required this.networkInfo,
+    this.hasNetwork = true,
   });
 
   @override
   Future<List<Product>> getAllProducts() async {
-    if (await networkInfo.isConnected) {
+    if (hasNetwork) {
       final remoteProducts = await remoteDataSource.fetchAllProducts();
       for (var product in remoteProducts) {
         await localDataSource.cacheProduct(product);
@@ -30,7 +31,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<Product?> getProductById(String id) async {
-    if (await networkInfo.isConnected) {
+    if (hasNetwork) {
       final product = await remoteDataSource.fetchProductById(id);
       if (product != null) {
         await localDataSource.updateCachedProduct(product);
@@ -48,7 +49,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> insertProduct(Product product) async {
-    if (await networkInfo.isConnected) {
+    if (hasNetwork) {
       await remoteDataSource.addProduct(product);
       await localDataSource.cacheProduct(product);
     } else {
@@ -58,7 +59,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> updateProduct(Product product) async {
-    if (await networkInfo.isConnected) {
+    if (hasNetwork) {
       await remoteDataSource.updateProduct(product);
       await localDataSource.updateCachedProduct(product);
     } else {
@@ -68,7 +69,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> deleteProduct(String id) async {
-    if (await networkInfo.isConnected) {
+    if (hasNetwork) {
       await remoteDataSource.deleteProduct(id);
       await localDataSource.removeCachedProduct(id);
     } else {
