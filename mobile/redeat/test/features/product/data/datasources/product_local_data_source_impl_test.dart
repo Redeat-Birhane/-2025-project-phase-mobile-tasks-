@@ -1,9 +1,11 @@
 import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_first_app/core/features/product/data/models/product_model.dart';
 import 'package:my_first_app/data/datasources/product_local_data_source_impl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
 
@@ -13,9 +15,7 @@ void main() {
 
   setUp(() {
     mockSharedPreferences = MockSharedPreferences();
-    dataSource = ProductLocalDataSourceImpl(
-      sharedPreferences: mockSharedPreferences,
-    );
+    dataSource = ProductLocalDataSourceImpl(sharedPreferences: mockSharedPreferences);
   });
 
   final productModel = ProductModel(
@@ -27,7 +27,7 @@ void main() {
   );
 
   final productList = [productModel];
-  final jsonString = json.encode(productList.map((product) => product.toJson()).toList());
+  final jsonString = json.encode(productList.map((p) => p.toJson()).toList());
 
   group('getCachedProducts', () {
     test('should return list of products from SharedPreferences', () async {
@@ -53,12 +53,13 @@ void main() {
   group('cacheProduct', () {
     test('should save product to SharedPreferences', () async {
       when(mockSharedPreferences.getString('CACHED_PRODUCTS')).thenReturn(null);
-      final encoded = json.encode([productModel.toJson()]);
-      when(mockSharedPreferences.setString('CACHED_PRODUCTS', encoded)).thenAnswer((_) async => true);
+      // Stubbing with exact expected argument values
+      final expectedJson = json.encode([productModel.toJson()]);
+      when(mockSharedPreferences.setString('CACHED_PRODUCTS', expectedJson)).thenAnswer((_) async => true);
 
       await dataSource.cacheProduct(productModel);
 
-      verify(mockSharedPreferences.setString('CACHED_PRODUCTS', encoded)).called(1);
+      verify(mockSharedPreferences.setString('CACHED_PRODUCTS', expectedJson)).called(1);
     });
   });
 
