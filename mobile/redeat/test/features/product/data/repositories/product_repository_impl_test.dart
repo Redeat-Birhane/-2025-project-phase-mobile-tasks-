@@ -8,18 +8,6 @@ void main() {
   late ProductRepositoryImpl repository;
   late MockProductRemoteDataSource mockRemoteDataSource;
   late MockProductLocalDataSource mockLocalDataSource;
-  late MockNetworkInfo mockNetworkInfo;
-
-  setUp(() {
-    mockRemoteDataSource = MockProductRemoteDataSource();
-    mockLocalDataSource = MockProductLocalDataSource();
-    mockNetworkInfo = MockNetworkInfo();
-    repository = ProductRepositoryImpl(
-      remoteDataSource: mockRemoteDataSource,
-      localDataSource: mockLocalDataSource,
-      networkInfo: mockNetworkInfo,
-    );
-  });
 
   final testProduct = Product(
     id: '1',
@@ -29,9 +17,19 @@ void main() {
     imageUrl: 'http://image.url',
   );
 
+  setUp(() {
+    mockRemoteDataSource = MockProductRemoteDataSource();
+    mockLocalDataSource = MockProductLocalDataSource();
+  });
+
   group('getAllProducts', () {
     test('should return remote data when network is connected', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+      repository = ProductRepositoryImpl(
+        remoteDataSource: mockRemoteDataSource,
+        localDataSource: mockLocalDataSource,
+        hasNetwork: true,
+      );
+
       when(mockRemoteDataSource.fetchAllProducts()).thenAnswer((_) async => [testProduct]);
 
       final result = await repository.getAllProducts();
@@ -42,7 +40,12 @@ void main() {
     });
 
     test('should return local data when network is disconnected', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => false);
+      repository = ProductRepositoryImpl(
+        remoteDataSource: mockRemoteDataSource,
+        localDataSource: mockLocalDataSource,
+        hasNetwork: false,
+      );
+
       when(mockLocalDataSource.getCachedProducts()).thenAnswer((_) async => [testProduct]);
 
       final result = await repository.getAllProducts();
@@ -54,7 +57,11 @@ void main() {
 
   group('insertProduct', () {
     test('should insert product when online', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+      repository = ProductRepositoryImpl(
+        remoteDataSource: mockRemoteDataSource,
+        localDataSource: mockLocalDataSource,
+        hasNetwork: true,
+      );
 
       await repository.insertProduct(testProduct);
 
@@ -63,7 +70,11 @@ void main() {
     });
 
     test('should throw exception when offline', () async {
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => false);
+      repository = ProductRepositoryImpl(
+        remoteDataSource: mockRemoteDataSource,
+        localDataSource: mockLocalDataSource,
+        hasNetwork: false,
+      );
 
       expect(() => repository.insertProduct(testProduct), throwsException);
     });
