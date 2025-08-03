@@ -1,14 +1,14 @@
 import '../entities/product.dart';
-import 'view_all_products_usecase.dart';
+import '../repositories/product_repoisitory.dart';
+import 'usecase.dart';
 
-class CreateProductUsecase {
-  final ViewAllProductsUsecase _viewAllProductsUsecase;
+class CreateProductUsecase extends UseCase<void, Product> {
+  final ProductRepository repository;
 
-  CreateProductUsecase(this._viewAllProductsUsecase);
+  CreateProductUsecase(this.repository);
 
-  Future<void> call(Product product) async {
-    final products = _viewAllProductsUsecase.products;
-    products.add(product);
-    await Future.delayed(Duration(milliseconds: 100));
+  @override
+  Future<void> call(Product product) {
+    return repository.createProduct(product);
   }
 }

@@ -1,18 +1,14 @@
 import '../entities/product.dart';
-import 'view_all_products_usecase.dart';
+import '../repositories/product_repoisitory.dart';
+import 'usecase.dart';
 
-class ViewProductUsecase {
-  final ViewAllProductsUsecase _viewAllProductsUsecase;
+class ViewProductUsecase extends UseCase<Product, String> {
+  final ProductRepository repository;
 
-  ViewProductUsecase(this._viewAllProductsUsecase);
+  ViewProductUsecase(this.repository);
 
-  Future<Product?> call(String id) async {
-    final products = await _viewAllProductsUsecase();
-    try {
-      return products.firstWhere((product) => product.id == id);
-    } catch (e) {
-
-      return null;
-    }
+  @override
+  Future<Product> call(String id) {
+    return repository.getProductById(id);
   }
 }
