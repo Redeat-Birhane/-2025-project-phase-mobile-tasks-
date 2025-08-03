@@ -1,13 +1,13 @@
 import '../entities/product.dart';
-import '../repositories/product_repository.dart';
-
-
-class InsertProductUsecase {
+import '../repositories/product_repoisitory.dart';
+import 'usecase.dart';
+class InsertProductUseCase implements UseCase<void, Product> {
   final ProductRepository repository;
 
-  InsertProductUsecase(this.repository);
+  InsertProductUseCase(this.repository);
 
-  Future<void> call(Product product) async {
-    await repository.insertProduct(product);
+  @override
+  Future<void> call(Product product) {
+    return repository.createProduct(product);
   }
 }

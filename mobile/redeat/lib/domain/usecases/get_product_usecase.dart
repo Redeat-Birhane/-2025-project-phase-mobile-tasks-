@@ -1,12 +1,13 @@
 import '../entities/product.dart';
-import '../repositories/product_repository.dart';
-
-class GetProductUsecase {
+import '../repositories/product_repoisitory.dart';
+import 'usecase.dart';
+class GetProductUseCase implements UseCase<Product?, String> {
   final ProductRepository repository;
 
-  GetProductUsecase(this.repository);
+  GetProductUseCase(this.repository);
 
-  Future<Product?> call(String id) async {
-    return await repository.getProductById(id);
+  @override
+  Future<Product?> call(String id) {
+    return repository.getProductById(id);
   }
 }
