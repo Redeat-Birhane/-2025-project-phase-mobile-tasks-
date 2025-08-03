@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_first_app/core/features/product/data/models/product_model.dart';
+import 'package:my_first_app/data/models/product_model.dart';
 
 void main() {
   group('ProductModel', () {

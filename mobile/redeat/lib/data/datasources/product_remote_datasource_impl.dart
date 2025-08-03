@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../core/features/product/data/models/product_model.dart';
+import '../models/product_model.dart';
 import '../../domain/entities/product.dart';
 import 'product_remote_data_source.dart';
 
