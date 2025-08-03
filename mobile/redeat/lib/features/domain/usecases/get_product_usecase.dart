@@ -1,6 +1,7 @@
 import '../entities/product.dart';
-import '../repositories/product_repoisitory.dart';
+import '../repositories/product_repository.dart';
 import 'usecase.dart';
+
 class GetProductUseCase implements UseCase<Product?, String> {
   final ProductRepository repository;
 
