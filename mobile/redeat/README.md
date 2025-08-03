@@ -1,10 +1,48 @@
-Remote Data Source
-This module handles fetching and managing product data from a remote API for the Ecommerce app.
+# 🛍️ E-Commerce App
 
-Communicates with the backend API at https://g5-flutter-learning-path-be.onrender.com/api/v1.
+A simple e-commerce Flutter app to create, update, view, and delete products with smooth navigation and responsive UI.
 
-Supports fetching all products, fetching by ID, adding, updating, and deleting products.
+## 🚀 Features
 
-Uses HTTP requests with JSON serialization for data transfer.
+- 📱 View list of products on Home screen
+- ➕ Add new product with image, category, price, and description
+- 🔁 Update or Delete existing products
+- 🔍 Search with filters (category, price)
+- 🎯 Smooth Navigation using Named Routes
+- 📱 Responsive UI for both mobile and tablet
 
-Ensures smooth integration between the app and remote server for real-time data access.
+## 🧭 Navigation
+
+- `/home`: Product list screen
+- `/add`: Add or update product
+- `/details`: View product details
+- `/search`: Filter and search products
+
+## 📷 Screenshots
+
+<img src="screenshots/home.png" width="300"/> <img src="screenshots/details.png" width="300"/>  
+<img src="screenshots/add.png" width="300"/> <img src="screenshots/search.png" width="300"/>
+
+## 🛠️ How to Run
+
+1. Clone the repo
+2. Run `flutter pub get`
+3. Launch emulator or connect device
+4. Run `flutter run`
+
+## 📂 Folder Structure
+
+- `lib/` — Source code files
+- `assets/` — Images and other resources
+- `screenshots/` — UI screenshots for this README
+
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the [online documentation](https://docs.flutter.dev/), which offers tutorials, samples, guidance on mobile development, and a full API reference.
