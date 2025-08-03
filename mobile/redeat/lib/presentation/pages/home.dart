@@ -1,141 +1,125 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import '../../core/utils/helpers.dart';
+import '../../data/datasources/product_local_data_source_impl.dart';
+import '../../data/datasources/product_remote_datasource_impl.dart';
 import '../../domain/entities/product.dart';
-import '../../domain/usecases/view_all_products_usecase.dart';
-import '../../domain/usecases/create_product_usecase.dart';
-import 'details.dart';
+import '../../domain/usecases/ get_all_products_usecase.dart';
+import '../../domain/usecases/insert_product_usecase.dart';
+import '../../data/repositories/product_repository_impl.dart';
+
+import '../widgets/product_card.dart';
 import 'add.dart';
+import 'details.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late final ViewAllProductsUsecase _viewAllProductsUsecase;
-  late final CreateProductUsecase _createProductUsecase;
+  late final GetAllProductsUsecase _getAllProductsUsecase;
+  late final InsertProductUsecase _insertProductUsecase;
 
   List<Product> _products = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initializeDependenciesAndLoadProducts();
+  }
 
-    _viewAllProductsUsecase = ViewAllProductsUsecase();
-    _createProductUsecase = CreateProductUsecase(_viewAllProductsUsecase);
+  Future<void> _initializeDependenciesAndLoadProducts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
 
-    _loadProducts();
+      final localDataSource = ProductLocalDataSourceImpl(sharedPreferences: prefs);
+      final remoteDataSource = ProductRemoteDataSourceImpl(client: http.Client());
+      final repository = ProductRepositoryImpl(
+        localDataSource: localDataSource,
+        remoteDataSource: remoteDataSource,
+      );
+
+      _getAllProductsUsecase = GetAllProductsUsecase(repository);
+      _insertProductUsecase = InsertProductUsecase(repository);
+
+      await _loadProducts();
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadProducts() async {
-    final products = await _viewAllProductsUsecase.call();
-    setState(() {
-      _products = products;
-    });
+    try {
+      final products = await _getAllProductsUsecase.call();
+      setState(() {
+        _products = products;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _navigateToAdd() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => AddUpdatePage(),
-      ),
+      MaterialPageRoute(builder: (_) => AddUpdatePage()),
     );
 
     if (result is Product) {
-      await _createProductUsecase.call(result);
-      await _loadProducts(); // Refresh the list after adding
+      await _insertProductUsecase.call(result);
+      await _loadProducts();
     }
   }
 
   void _navigateToDetails(Product product) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => DetailsPage(product: product),
-      ),
+      MaterialPageRoute(builder: (_) => DetailsPage(product: product)),
     );
 
     if (result != null && result is Product) {
-      await _loadProducts(); // Refresh after update or delete
+      await _loadProducts();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final mobile = isMobile(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Available Products'),
-      ),
-      body: _products.isEmpty
-          ? Center(child: CircularProgressIndicator())
+      appBar: AppBar(title: const Text('Available Products')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _products.isEmpty
+          ? const Center(child: Text('No products found.'))
           : Padding(
-        padding: EdgeInsets.all(isMobile ? 8 : 16),
+        padding: EdgeInsets.all(mobile ? 8 : 16),
         child: GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isMobile ? 1 : 2,
-            childAspectRatio: isMobile ? 1.5 : 1.8,
-            crossAxisSpacing: isMobile ? 8 : 16,
-            mainAxisSpacing: isMobile ? 8 : 16,
+            crossAxisCount: mobile ? 1 : 2,
+            childAspectRatio: mobile ? 1.5 : 1.8,
+            crossAxisSpacing: mobile ? 8 : 16,
+            mainAxisSpacing: mobile ? 8 : 16,
           ),
           itemCount: _products.length,
           itemBuilder: (context, index) {
             final product = _products[index];
             return GestureDetector(
               onTap: () => _navigateToDetails(product),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Hero(
-                        tag: 'product-${product.id}',
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(12)),
-                          child: Image.asset(
-                            product.imageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(isMobile ? 8 : 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: isMobile ? 16 : 18,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 4),
-                          Text('\$${product.price}',
-                              style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
+              child: ProductCard(product: product),
             );
           },
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAdd,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

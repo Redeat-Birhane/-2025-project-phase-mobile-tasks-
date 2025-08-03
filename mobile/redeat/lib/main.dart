@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../domain/entities/product.dart';
-import 'pages/add.dart';
-import 'pages/home.dart';
-import 'pages/details.dart';
+import 'core/constants/app_strings.dart';
+import 'presentation/pages/home.dart';
+import 'presentation/pages/add.dart';
+import 'presentation/pages/details.dart';
+import 'domain/entities/product.dart';
+
 
 void main() {
   runApp(ProductManagementApp());
@@ -12,7 +14,7 @@ class ProductManagementApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Product Management',
+      title: AppStrings.appTitle,
       theme: ThemeData(primarySwatch: Colors.blue),
       home: HomePage(),
       routes: {
@@ -20,10 +22,8 @@ class ProductManagementApp extends StatelessWidget {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/details') {
-          final product = settings.arguments as dynamic;
-          if (product is Product) {
-            return MaterialPageRoute(builder: (_) => DetailsPage(product: product));
-          }
+          final product = settings.arguments as Product;
+          return MaterialPageRoute(builder: (_) => DetailsPage(product: product));
         }
         return null;
       },
