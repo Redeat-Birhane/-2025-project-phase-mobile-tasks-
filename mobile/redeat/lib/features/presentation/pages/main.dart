@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'core/constants/app_strings.dart';
-import 'presentation/pages/home.dart';
-import 'presentation/pages/add.dart';
-import 'presentation/pages/details.dart';
-import 'domain/entities/product.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../presentation/pages/home.dart';
+import '../../../presentation/pages/add.dart';
+import '../../../presentation/pages/details.dart';
+import '../../../domain/entities/product.dart';
 
 
 void main() {
