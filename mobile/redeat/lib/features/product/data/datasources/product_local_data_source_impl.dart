@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/error/exceptions.dart';
 import '../../../domain/entities/product.dart';
 import 'product_local_data_source.dart';
@@ -13,9 +15,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
   @override
   Future<void> cacheProducts(List<Product> products) {
-    final productListJson =
+    final productJsonList =
     products.map((product) => json.encode(_productToMap(product))).toList();
-    return sharedPreferences.setStringList(CACHED_PRODUCTS, productListJson);
+    return sharedPreferences.setStringList(CACHED_PRODUCTS, productJsonList);
   }
 
   @override
