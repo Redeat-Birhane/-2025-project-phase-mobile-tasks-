@@ -1,20 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/utils/helpers.dart';
-import '../../data/datasources/product_local_data_source_impl.dart';
-import '../../data/datasources/product_remote_datasource_impl.dart';
-import '../../domain/entities/product.dart';
-import '../../domain/usecases/insert_product_usecase.dart';
-import '../../domain/usecases/update_product_usecase.dart';
-import '../../data/repositories/product_repository_impl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class AddUpdatePage extends StatefulWidget {
-  final Product? product;
+  final Map<String, dynamic>? product;
 
-  AddUpdatePage({this.product, Key? key}) : super(key: key);
+  const AddUpdatePage({Key? key, this.product}) : super(key: key);
 
   @override
   _AddUpdatePageState createState() => _AddUpdatePageState();
@@ -22,135 +13,143 @@ class AddUpdatePage extends StatefulWidget {
 
 class _AddUpdatePageState extends State<AddUpdatePage> {
   final _formKey = GlobalKey<FormState>();
-  final _uuid = Uuid();
-
   late TextEditingController _nameController;
   late TextEditingController _priceController;
+  late TextEditingController _categoryController;
   late TextEditingController _descriptionController;
-  late TextEditingController _imageUrlController;
 
-  InsertProductUsecase? _insertProductUsecase;
-  UpdateProductUsecase? _updateProductUsecase;
+  double _rating = 0;
+  List<int> _sizes = [];
 
-  bool _isLoading = true;
+  XFile? _pickedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _initUsecases();
-
-    _nameController = TextEditingController(text: widget.product?.name ?? '');
-    _priceController = TextEditingController(text: widget.product?.price.toString() ?? '');
-    _descriptionController = TextEditingController(text: widget.product?.description ?? '');
-    _imageUrlController = TextEditingController(text: widget.product?.imageUrl ?? '');
+    final product = widget.product;
+    _nameController = TextEditingController(text: product?['name'] ?? '');
+    _priceController = TextEditingController(text: product?['price']?.toString() ?? '');
+    _categoryController = TextEditingController(text: product?['category'] ?? '');
+    _descriptionController = TextEditingController(text: product?['description'] ?? '');
+    _rating = product?['rating'] ?? 0;
+    _sizes = List<int>.from(product?['sizes'] ?? []);
   }
 
-  Future<void> _initUsecases() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    final localDataSource = ProductLocalDataSourceImpl(sharedPreferences: sharedPreferences);
-    final remoteDataSource = ProductRemoteDataSourceImpl(client: http.Client());
-    final repository = ProductRepositoryImpl(
-      localDataSource: localDataSource,
-      remoteDataSource: remoteDataSource,
-    );
-
-    _insertProductUsecase = InsertProductUsecase(repository);
-    _updateProductUsecase = UpdateProductUsecase(repository);
-
-    setState(() {
-      _isLoading = false;
-    });
+  Future<void> _pickImage() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _pickedImage = picked;
+      });
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
+    _categoryController.dispose();
     _descriptionController.dispose();
-    _imageUrlController.dispose();
     super.dispose();
   }
 
-  void _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      final productData = {
+        'id': widget.product?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        'name': _nameController.text.trim(),
+        'price': double.tryParse(_priceController.text.trim()) ?? 0.0,
+        'category': _categoryController.text.trim(),
+        'rating': _rating,
+        'description': _descriptionController.text.trim(),
+        'sizes': _sizes,
+        'image': _pickedImage?.path ?? widget.product?['image'] ?? 'assets/images/shoe.jpg',
+      };
 
-    if (_insertProductUsecase == null || _updateProductUsecase == null) {
-      return;
-    }
-
-    final name = _nameController.text.trim();
-    final price = double.tryParse(_priceController.text.trim()) ?? 0.0;
-    final description = _descriptionController.text.trim();
-    final imageUrl = _imageUrlController.text.trim();
-
-    if (widget.product == null) {
-      final newProduct = Product(
-        id: _uuid.v4(),
-        name: name,
-        description: description,
-        imageUrl: imageUrl.isEmpty ? AppStrings.defaultImageUrl : imageUrl,
-        price: price,
-      );
-      await _insertProductUsecase!.call(newProduct);
-      Navigator.pop(context, newProduct);
-    } else {
-      final updatedProduct = widget.product!.copyWith(
-        name: name,
-        description: description,
-        imageUrl: imageUrl.isEmpty ? AppStrings.defaultImageUrl : imageUrl,
-        price: price,
-      );
-      await _updateProductUsecase!.call(updatedProduct);
-      Navigator.pop(context, updatedProduct);
+      Navigator.pop(context, productData); // Return updated/new product
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final mobile = isMobile(context);
-
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: Text(widget.product == null ? 'Add Product' : 'Update Product')),
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.product == null ? 'Add Product' : 'Update Product')),
+      appBar: AppBar(
+        title: Text(widget.product == null ? 'Add Product' : 'Update Product'),
+      ),
       body: Padding(
-        padding: EdgeInsets.all(mobile ? 16 : 24),
+        padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: isMobile ? 150 : 250,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[300],
+                    image: _pickedImage != null
+                        ? DecorationImage(
+                      image: FileImage(File(_pickedImage!.path)),
+                      fit: BoxFit.cover,
+                    )
+                        : widget.product != null && widget.product!['image'] != null
+                        ? DecorationImage(
+                      image: widget.product!['image'].toString().startsWith('assets/')
+                          ? AssetImage(widget.product!['image']) as ImageProvider
+                          : FileImage(File(widget.product!['image'])),
+                      fit: BoxFit.cover,
+                    )
+                        : null,
+                  ),
+                  child: _pickedImage == null &&
+                      (widget.product == null || widget.product!['image'] == null)
+                      ? Center(
+                    child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey[700]),
+                  )
+                      : null,
+                ),
+              ),
+              SizedBox(height: isMobile ? 12 : 16),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(labelText: 'Product Name'),
-                validator: (value) => (value == null || value.isEmpty) ? AppStrings.enterNameError : null,
+                validator: (value) =>
+                (value == null || value.isEmpty) ? 'Please enter a name' : null,
               ),
-              SizedBox(height: mobile ? 12 : 16),
+              SizedBox(height: isMobile ? 12 : 16),
               TextFormField(
                 controller: _priceController,
                 decoration: InputDecoration(labelText: 'Price'),
+                validator: (value) =>
+                (value == null || value.isEmpty) ? 'Please enter a price' : null,
                 keyboardType: TextInputType.number,
-                validator: (value) => (value == null || value.isEmpty) ? AppStrings.enterPriceError : null,
               ),
-              SizedBox(height: mobile ? 12 : 16),
+              SizedBox(height: isMobile ? 12 : 16),
+              TextFormField(
+                controller: _categoryController,
+                decoration: InputDecoration(labelText: 'Category'),
+                validator: (value) =>
+                (value == null || value.isEmpty) ? 'Please enter a category' : null,
+              ),
+              SizedBox(height: isMobile ? 12 : 16),
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(labelText: 'Description'),
                 maxLines: 3,
               ),
-              SizedBox(height: mobile ? 12 : 16),
-              TextFormField(
-                controller: _imageUrlController,
-                decoration: InputDecoration(labelText: 'Image URL'),
-              ),
-              SizedBox(height: mobile ? 12 : 16),
+              SizedBox(height: isMobile ? 12 : 16),
               ElevatedButton(
                 onPressed: _submit,
                 child: Text(widget.product == null ? 'Add Product' : 'Update Product'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: isMobile ? 14 : 16),
+                ),
               ),
             ],
           ),

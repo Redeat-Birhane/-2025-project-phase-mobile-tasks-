@@ -1,126 +1,147 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import '../../core/utils/helpers.dart';
-import '../../data/datasources/product_local_data_source_impl.dart';
-import '../../data/datasources/product_remote_datasource_impl.dart';
-import '../../domain/entities/product.dart';
-import '../../domain/usecases/ get_all_products_usecase.dart';
-import '../../domain/usecases/insert_product_usecase.dart';
-import '../../data/repositories/product_repository_impl.dart';
-
 import '../widgets/product_card.dart';
-import 'add.dart';
-import 'details.dart';
+
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late final GetAllProductsUsecase _getAllProductsUsecase;
-  late final InsertProductUsecase _insertProductUsecase;
+  List<Map<String, dynamic>> products = [
+    {
+      'id': '1',
+      'name': 'Derby Leather Shoes',
+      'price': 120.0,
+      'category': "Men's shoe",
+      'rating': 4.0,
+      'image': 'assets/images/shoe.jpg',
+      'description': 'Classic derby shoes made from premium leather...',
+      'sizes': [39, 40, 41, 42, 43, 44],
+    },
+    {
+      'id': '2',
+      'name': 'Running Sneakers',
+      'price': 85.0,
+      'category': "Men's shoe",
+      'rating': 4.5,
+      'image': 'assets/images/shoe.jpg',
+      'description': 'Lightweight running shoes with cushion technology...',
+      'sizes': [40, 41, 42, 43],
+    },
+  ];
 
-  List<Product> _products = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeDependenciesAndLoadProducts();
+  void _addProduct(Map<String, dynamic> newProduct) {
+    setState(() {
+      products.add(newProduct);
+    });
   }
 
-  Future<void> _initializeDependenciesAndLoadProducts() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      final localDataSource = ProductLocalDataSourceImpl(sharedPreferences: prefs);
-      final remoteDataSource = ProductRemoteDataSourceImpl(client: http.Client());
-      final repository = ProductRepositoryImpl(
-        localDataSource: localDataSource,
-        remoteDataSource: remoteDataSource,
-      );
-
-      _getAllProductsUsecase = GetAllProductsUsecase(repository);
-      _insertProductUsecase = InsertProductUsecase(repository);
-
-      await _loadProducts();
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
+  void _updateProduct(Map<String, dynamic> updatedProduct) {
+    setState(() {
+      final index = products.indexWhere((p) => p['id'] == updatedProduct['id']);
+      if (index != -1) {
+        products[index] = updatedProduct;
+      }
+    });
   }
 
-  Future<void> _loadProducts() async {
-    try {
-      final products = await _getAllProductsUsecase.call();
-      setState(() {
-        _products = products;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  void _navigateToAdd() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => AddUpdatePage()),
-    );
-
-    if (result is Product) {
-      await _insertProductUsecase.call(result);
-      await _loadProducts();
-    }
-  }
-
-  void _navigateToDetails(Product product) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => DetailsPage(product: product)),
-    );
-
-    if (result != null && result is Product) {
-      await _loadProducts();
-    }
+  void _deleteProduct(String productId) {
+    setState(() {
+      products.removeWhere((p) => p['id'] == productId);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final mobile = isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Available Products')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _products.isEmpty
-          ? const Center(child: Text('No products found.'))
-          : Padding(
-        padding: EdgeInsets.all(mobile ? 8 : 16),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: mobile ? 1 : 2,
-            childAspectRatio: mobile ? 1.5 : 1.8,
-            crossAxisSpacing: mobile ? 8 : 16,
-            mainAxisSpacing: mobile ? 8 : 16,
-          ),
-          itemCount: _products.length,
-          itemBuilder: (context, index) {
-            final product = _products[index];
-            return GestureDetector(
-              onTap: () => _navigateToDetails(product),
-              child: ProductCard(product: product),
-            );
-          },
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('July 14, 2023', style: TextStyle(fontSize: isMobile ? 12 : 14)),
+                Text(
+                  'Hello, Yohannes',
+                  style: TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            IconButton(
+              icon: Icon(Icons.search, size: isMobile ? 24 : 28),
+              onPressed: () {
+                Navigator.pushNamed(context, '/search');
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Available Products',
+              style: TextStyle(fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: isMobile ? 12 : 20),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isMobile ? 1 : 2,
+                  childAspectRatio: isMobile ? 1.5 : 1.8,
+                  crossAxisSpacing: isMobile ? 8 : 16,
+                  mainAxisSpacing: isMobile ? 8 : 16,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return ProductCard(
+                    product: product,
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/details',
+                        arguments: {
+                          'product': product,
+                          'onDelete': () => _deleteProduct(product['id']),
+                        },
+                      ).then((updatedProduct) {
+                        if (updatedProduct != null && updatedProduct is Map<String, dynamic>) {
+                          _updateProduct(updatedProduct);
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAdd,
-        child: const Icon(Icons.add),
+        onPressed: () {
+          Navigator.pushNamed(
+            context,
+            '/add',
+          ).then((newProduct) {
+            if (newProduct != null && newProduct is Map<String, dynamic>) {
+              _addProduct(newProduct);
+            }
+          });
+        },
+        child: Icon(Icons.add, size: isMobile ? 24 : 28),
+        backgroundColor: Colors.blue,
+        tooltip: 'Add Product',
       ),
+      floatingActionButtonLocation:
+      isMobile ? FloatingActionButtonLocation.centerFloat : FloatingActionButtonLocation.endFloat,
     );
   }
 }

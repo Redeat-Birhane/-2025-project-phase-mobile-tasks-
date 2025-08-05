@@ -4,9 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../../../domain/entities/product.dart';
+import '../utils/product_utils.dart';
 import 'product_local_data_source.dart';
 
-const CACHED_PRODUCTS = 'CACHED_PRODUCTS';
+const cachedProductsKey = 'CACHED_PRODUCTS';
 
 class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   final SharedPreferences sharedPreferences;
@@ -15,52 +16,38 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
   @override
   Future<void> cacheProducts(List<Product> products) {
-    final productJsonList =
-    products.map((product) => json.encode(_productToMap(product))).toList();
-    return sharedPreferences.setStringList(CACHED_PRODUCTS, productJsonList);
+    final productJsonList = products.map((product) => productToMap(product)).toList();
+    return sharedPreferences.setString(cachedProductsKey, json.encode(productJsonList));
   }
 
   @override
   Future<List<Product>> getCachedProducts() {
-    final jsonStringList = sharedPreferences.getStringList(CACHED_PRODUCTS);
-    if (jsonStringList == null || jsonStringList.isEmpty) {
-      throw CacheException();
+    final jsonString = sharedPreferences.getString(cachedProductsKey);
+
+    if (jsonString != null) {
+      final List<dynamic> decodedJson = json.decode(jsonString);
+      return Future.value(jsonListToProductList(decodedJson));
     } else {
-      final products = jsonStringList
-          .map((productJson) =>
-          _mapToProduct(json.decode(productJson) as Map<String, dynamic>))
-          .toList();
-      return Future.value(products);
+      throw CacheException();
     }
   }
 
   @override
   Future<Product> getCachedProduct(String id) async {
-    final products = await getCachedProducts();
-    try {
-      return products.firstWhere((product) => product.id == id);
-    } catch (e) {
-      throw CacheException();
+    final jsonString = sharedPreferences.getString(cachedProductsKey);
+
+    if (jsonString != null) {
+      final List<dynamic> decodedJson = json.decode(jsonString);
+      final products = jsonListToProductList(decodedJson);
+
+      try {
+        final product = products.firstWhere((product) => product.id == id);
+        return Future.value(product);
+      } catch (_) {
+        throw CacheException(); // Product not found
+      }
+    } else {
+      throw CacheException(); // No cache exists
     }
-  }
-
-  Map<String, dynamic> _productToMap(Product product) {
-    return {
-      'id': product.id,
-      'name': product.name,
-      'description': product.description,
-      'imageUrl': product.imageUrl,
-      'price': product.price,
-    };
-  }
-
-  Product _mapToProduct(Map<String, dynamic> map) {
-    return Product(
-      id: map['id'],
-      name: map['name'],
-      description: map['description'],
-      imageUrl: map['imageUrl'],
-      price: (map['price'] as num).toDouble(),
-    );
   }
 }

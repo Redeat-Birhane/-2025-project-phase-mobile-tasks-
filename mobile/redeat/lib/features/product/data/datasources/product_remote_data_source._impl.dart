@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../domain/entities/product.dart';
+import '../utils/product_utils.dart';
 import 'product_remote_data_source.dart';
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
@@ -18,7 +19,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     if (response.statusCode == 200) {
       final decodedJson = json.decode(response.body);
       final List<dynamic> productsJson = decodedJson['data'];
-      return productsJson.map((jsonItem) => _mapToProduct(jsonItem)).toList();
+      return jsonListToProductList(productsJson);
     } else {
       throw ServerException();
     }
@@ -31,7 +32,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     if (response.statusCode == 200) {
       final decodedJson = json.decode(response.body);
       final productJson = decodedJson['data'];
-      return _mapToProduct(productJson);
+      return mapToProduct(productJson);
     } else {
       throw ServerException();
     }
@@ -42,7 +43,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     final response = await client.post(
       Uri.parse('${ApiConstants.baseUrl}/products'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode(_productToMap(product)),
+      body: json.encode(productToMap(product)),
     );
 
     if (response.statusCode != 201) {
@@ -55,7 +56,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     final response = await client.put(
       Uri.parse('${ApiConstants.baseUrl}/products/${product.id}'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode(_productToMap(product)),
+      body: json.encode(productToMap(product)),
     );
 
     if (response.statusCode != 200) {
@@ -70,25 +71,5 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     if (response.statusCode != 200) {
       throw ServerException();
     }
-  }
-
-  Map<String, dynamic> _productToMap(Product product) {
-    return {
-      'id': product.id,
-      'name': product.name,
-      'description': product.description,
-      'imageUrl': product.imageUrl,
-      'price': product.price,
-    };
-  }
-
-  Product _mapToProduct(dynamic json) {
-    return Product(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      imageUrl: json['imageUrl'],
-      price: (json['price'] as num).toDouble(),
-    );
   }
 }
