@@ -1,22 +1,13 @@
-# 🛍️ E-Commerce App — Domain Layer Refactoring
+## Architecture & Data Flow
 
-This project focuses on refactoring the **domain layer** of the e-commerce Flutter app following **Clean Architecture** principles and callable use cases.
+This project follows Clean Architecture principles to ensure separation of concerns and maintainability.
 
----
+- **Core**: Shared components, error handling, and platform-specific utilities.
+- **Features**: Feature modules such as `product` encapsulate domain, data, and presentation layers.
+- **Domain Layer**: Contains entities and use cases representing business rules.
+- **Data Layer**: Contains models and data sources handling data from remote APIs or local storage.
+- **Presentation Layer** (if implemented): UI components and state management.
 
-## 🚀 Features
+The `ProductModel` mirrors the `Product` entity and supports JSON serialization/deserialization to facilitate data exchange between layers.
 
-- **Product Entity** with core attributes (`id`, `name`, `description`, `imageUrl`, `price`)
-- **Use Cases** implemented as callable classes:
-    - View all products
-    - View a product by ID
-    - Create a new product
-    - Update an existing product
-    - Delete a product by ID
-- Clear separation of **domain logic** from UI and data persistence
-- In-memory product list simulates data storage for domain use cases
-
----
-
-
-
+Unit tests ensure the correctness of models and business logic.
