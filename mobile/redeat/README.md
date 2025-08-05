@@ -1,27 +1,29 @@
-This task involves implementing and testing a local data source for caching products using SharedPreferences. It helps ensure the app works offline or loads temporary data while fetching from the server.
+This task involved creating the remote data source layer for the Ecommerce app, responsible for fetching and manipulating product data from a RESTful API.
 
-✅ Features Implemented
-Created ProductLocalDataSourceImpl class to handle local storage of products.
+Features Implemented
+ProductRemoteDataSourceImpl class that implements the contract ProductRemoteDataSource.
 
-Used SharedPreferences to cache product lists as JSON strings.
+Utilized the API base URL from a constants file to ensure maintainability.
 
-Implemented methods to:
+Implemented all CRUD operations using HTTP requests:
 
-Cache a list of products
+getAllProducts() — Fetches all products from the API.
 
-Retrieve all cached products
+getProduct(String id) — Retrieves a single product by ID.
 
-Retrieve a single cached product by ID
+createProduct(Product product) — Sends a new product to the API.
 
-Handled edge cases (e.g., no cache) using a custom CacheException.
+updateProduct(Product product) — Updates an existing product on the API.
 
-🧪 Unit Testing
-Created unit tests for:
+deleteProduct(String id) — Deletes a product by ID.
 
-cacheProducts() – ensures products are stored locally.
+JSON serialization and deserialization for network communication.
 
-getCachedProducts() – retrieves cached products or throws exception.
+Error handling by throwing ServerException on unexpected status codes.
 
-getCachedProduct(String id) – retrieves a single product or throws exception.
+Notes
+The implementation follows Clean Architecture principles and uses the repository pattern.
 
-Used mockito to mock SharedPreferences.
+API constants are managed separately in the ApiConstants class.
+
+This setup enables seamless integration between the domain layer and the remote API.
