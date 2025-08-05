@@ -1,24 +1,24 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../domain/entities/product.dart';
 import 'product_remote_data_source.dart';
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   final http.Client client;
-  final String baseUrl;
 
-  ProductRemoteDataSourceImpl({required this.client, required this.baseUrl});
+  ProductRemoteDataSourceImpl({required this.client});
 
   @override
   Future<List<Product>> getAllProducts() async {
-    final response = await client.get(Uri.parse('$baseUrl/products'));
+    final response = await client.get(Uri.parse('${ApiConstants.baseUrl}/products'));
 
     if (response.statusCode == 200) {
-      final List<dynamic> jsonList = json.decode(response.body);
-      return jsonList
-          .map((jsonItem) => _mapToProduct(jsonItem))
-          .toList();
+      final decodedJson = json.decode(response.body);
+      final List<dynamic> productsJson = decodedJson['data'];
+      return productsJson.map((jsonItem) => _mapToProduct(jsonItem)).toList();
     } else {
       throw ServerException();
     }
@@ -26,11 +26,12 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<Product> getProduct(String id) async {
-    final response = await client.get(Uri.parse('$baseUrl/products/$id'));
+    final response = await client.get(Uri.parse('${ApiConstants.baseUrl}/products/$id'));
 
     if (response.statusCode == 200) {
-      final jsonMap = json.decode(response.body);
-      return _mapToProduct(jsonMap);
+      final decodedJson = json.decode(response.body);
+      final productJson = decodedJson['data'];
+      return _mapToProduct(productJson);
     } else {
       throw ServerException();
     }
@@ -39,7 +40,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<void> createProduct(Product product) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/products'),
+      Uri.parse('${ApiConstants.baseUrl}/products'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(_productToMap(product)),
     );
@@ -52,7 +53,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<void> updateProduct(Product product) async {
     final response = await client.put(
-      Uri.parse('$baseUrl/products/${product.id}'),
+      Uri.parse('${ApiConstants.baseUrl}/products/${product.id}'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(_productToMap(product)),
     );
@@ -64,7 +65,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<void> deleteProduct(String id) async {
-    final response = await client.delete(Uri.parse('$baseUrl/products/$id'));
+    final response = await client.delete(Uri.parse('${ApiConstants.baseUrl}/products/$id'));
 
     if (response.statusCode != 200) {
       throw ServerException();
