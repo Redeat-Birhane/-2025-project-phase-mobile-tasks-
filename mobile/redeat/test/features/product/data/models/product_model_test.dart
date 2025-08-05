@@ -1,36 +1,32 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_first_app/data/models/product_model.dart';
+import 'package:my_first_app/features/product/data/models/product_model.dart';
 
 void main() {
   group('ProductModel', () {
-    final productJson = {
-      'id': '123',
-      'name': 'Test Product',
-      'description': 'Test description',
-      'price': 99.99,
-      'imageUrl': 'http://example.com/image.jpg',
-    };
-
-    final productModel = ProductModel(
-      id: '123',
+    final tProductModel = ProductModel(
+      id: '1',
       name: 'Test Product',
-      description: 'Test description',
-      price: 99.99,
+      description: 'This is a test product',
       imageUrl: 'http://example.com/image.jpg',
+      price: 99.99,
     );
 
-    test('fromJson should return a valid ProductModel', () {
-      final result = ProductModel.fromJson(productJson);
-      expect(result.id, productModel.id);
-      expect(result.name, productModel.name);
-      expect(result.description, productModel.description);
-      expect(result.price, productModel.price);
-      expect(result.imageUrl, productModel.imageUrl);
+    final tProductJson = {
+      'id': '1',
+      'name': 'Test Product',
+      'description': 'This is a test product',
+      'imageUrl': 'http://example.com/image.jpg',
+      'price': 99.99,
+    };
+
+    test('fromJson should return a valid model', () {
+      final result = ProductModel.fromJson(tProductJson);
+      expect(result, equals(tProductModel));
     });
 
     test('toJson should return a valid JSON map', () {
-      final result = productModel.toJson();
-      expect(result, productJson);
+      final result = tProductModel.toJson();
+      expect(result, equals(tProductJson));
     });
   });
 }

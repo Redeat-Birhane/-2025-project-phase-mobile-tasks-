@@ -1,48 +1,29 @@
-# 🛍️ E-Commerce App
+This task involved creating the remote data source layer for the Ecommerce app, responsible for fetching and manipulating product data from a RESTful API.
 
-A simple e-commerce Flutter app to create, update, view, and delete products with smooth navigation and responsive UI.
+Features Implemented
+ProductRemoteDataSourceImpl class that implements the contract ProductRemoteDataSource.
 
-## 🚀 Features
+Utilized the API base URL from a constants file to ensure maintainability.
 
-- 📱 View list of products on Home screen
-- ➕ Add new product with image, category, price, and description
-- 🔁 Update or Delete existing products
-- 🔍 Search with filters (category, price)
-- 🎯 Smooth Navigation using Named Routes
-- 📱 Responsive UI for both mobile and tablet
+Implemented all CRUD operations using HTTP requests:
 
-## 🧭 Navigation
+getAllProducts() — Fetches all products from the API.
 
-- `/home`: Product list screen
-- `/add`: Add or update product
-- `/details`: View product details
-- `/search`: Filter and search products
+getProduct(String id) — Retrieves a single product by ID.
 
-## 📷 Screenshots
+createProduct(Product product) — Sends a new product to the API.
 
-<img src="screenshots/home.png" width="300"/> <img src="screenshots/details.png" width="300"/>  
-<img src="screenshots/add.png" width="300"/> <img src="screenshots/search.png" width="300"/>
+updateProduct(Product product) — Updates an existing product on the API.
 
-## 🛠️ How to Run
+deleteProduct(String id) — Deletes a product by ID.
 
-1. Clone the repo
-2. Run `flutter pub get`
-3. Launch emulator or connect device
-4. Run `flutter run`
+JSON serialization and deserialization for network communication.
 
-## 📂 Folder Structure
+Error handling by throwing ServerException on unexpected status codes.
 
-- `lib/` — Source code files
-- `assets/` — Images and other resources
-- `screenshots/` — UI screenshots for this README
+Notes
+The implementation follows Clean Architecture principles and uses the repository pattern.
 
-## Getting Started
+API constants are managed separately in the ApiConstants class.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the [online documentation](https://docs.flutter.dev/), which offers tutorials, samples, guidance on mobile development, and a full API reference.
+This setup enables seamless integration between the domain layer and the remote API.
