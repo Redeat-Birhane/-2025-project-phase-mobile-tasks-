@@ -1,13 +1,14 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:my_app/core/error/exceptions.dart';
-import 'package:my_app/core/error/failures.dart';
-import 'package:my_app/core/platform/network_info.dart';
-import 'package:my_app/features/product/data/datasources/product_local_data_source.dart';
-import 'package:my_app/features/product/data/datasources/product_remote_data_source.dart';
-import 'package:my_app/features/product/data/repositories/product_repository_impl.dart';
-import 'package:my_app/features/product/domain/entities/product.dart';
+import 'package:my_first_app/core/error/exceptions.dart';
+import 'package:my_first_app/core/error/failures.dart';
+import 'package:my_first_app/core/platform/network_info.dart';
+import 'package:my_first_app/features/domain/entities/product.dart';
+import 'package:my_first_app/features/product/data/datasources/product_local_data_source.dart';
+import 'package:my_first_app/features/product/data/datasources/product_remote_data_source.dart';
+import 'package:my_first_app/features/product/data/repositories/product_repository_impl.dart';
+
 
 class MockRemoteDataSource extends Mock implements ProductRemoteDataSource {}
 
@@ -91,5 +92,4 @@ void main() {
     });
   });
 
-  // Similar tests for getProduct, createProduct, updateProduct, deleteProduct can be written following this pattern
 }
