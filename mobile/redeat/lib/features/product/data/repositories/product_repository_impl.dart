@@ -3,10 +3,9 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/platform/network_info.dart';
 import '../../../domain/entities/product.dart';
-import '../../domain/repositories/product_repository.dart';
+import '../../../domain/repositories/product_repository.dart';
 import '../datasources/product_local_data_source.dart';
 import '../datasources/product_remote_data_source.dart';
-
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductRemoteDataSource remoteDataSource;
@@ -19,12 +18,13 @@ class ProductRepositoryImpl implements ProductRepository {
     required this.networkInfo,
   });
 
+
   @override
   Future<Either<Failure, List<Product>>> getAllProducts() async {
     if (await networkInfo.isConnected) {
       try {
         final remoteProducts = await remoteDataSource.getAllProducts();
-        localDataSource.cacheProducts(remoteProducts);
+        await localDataSource.cacheProducts(remoteProducts);
         return Right(remoteProducts);
       } on ServerException {
         return Left(ServerFailure());
@@ -38,6 +38,7 @@ class ProductRepositoryImpl implements ProductRepository {
       }
     }
   }
+
 
   @override
   Future<Either<Failure, Product>> getProductById(String id) async {
@@ -58,6 +59,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
+
   @override
   Future<Either<Failure, void>> createProduct(Product product) async {
     if (await networkInfo.isConnected) {
@@ -72,6 +74,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
+
   @override
   Future<Either<Failure, void>> updateProduct(Product product) async {
     if (await networkInfo.isConnected) {
@@ -85,6 +88,7 @@ class ProductRepositoryImpl implements ProductRepository {
       return Left(NetworkFailure());
     }
   }
+
 
   @override
   Future<Either<Failure, void>> deleteProduct(String id) async {

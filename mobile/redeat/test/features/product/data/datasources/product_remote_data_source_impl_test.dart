@@ -6,6 +6,8 @@ import 'package:my_first_app/core/constants/api_constants.dart';
 import 'package:my_first_app/core/error/exceptions.dart';
 import 'package:my_first_app/features/domain/entities/product.dart';
 import 'package:my_first_app/features/product/data/datasources/product_remote_data_source._impl.dart';
+import 'package:my_first_app/features/product/data/utils/product_utils.dart';
+
 
 class MockHttpClient extends Mock implements http.Client {}
 
@@ -26,13 +28,7 @@ void main() {
     imageUrl: 'http://example.com/image.png',
   );
 
-  final tProductJson = {
-    'id': '123',
-    'name': 'Test Product',
-    'description': 'Description',
-    'price': 9.99,
-    'imageUrl': 'http://example.com/image.png',
-  };
+  final tProductJson = productToMap(tProduct);
 
   final tProductsJsonList = [tProductJson];
   final tProductsResponseJson = json.encode({
@@ -64,6 +60,4 @@ void main() {
       expect(() => call(), throwsA(isA<ServerException>()));
     });
   });
-
-
 }

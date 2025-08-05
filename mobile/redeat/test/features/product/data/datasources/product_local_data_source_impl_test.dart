@@ -1,11 +1,12 @@
 import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:my_first_app/features/product/data/utils/product_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_first_app/core/error/exceptions.dart';
 import 'package:my_first_app/features/domain/entities/product.dart';
 import 'package:my_first_app/features/product/data/datasources/product_local_data_source_impl.dart';
+
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
 
@@ -27,15 +28,9 @@ void main() {
   );
 
   final tProductList = [tProduct];
-  final tProductJsonList = tProductList.map((p) {
-    return json.encode({
-      'id': p.id,
-      'name': p.name,
-      'description': p.description,
-      'imageUrl': p.imageUrl,
-      'price': p.price,
-    });
-  }).toList();
+  final tProductJsonList = tProductList
+      .map((p) => json.encode(productToMap(p)))
+      .toList();
 
   group('cacheProducts', () {
     test('should call SharedPreferences to cache the list of products', () async {
