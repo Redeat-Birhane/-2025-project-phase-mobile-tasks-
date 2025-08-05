@@ -1,55 +1,27 @@
-# eCommerce Mobile App - Clean Architecture & TDD Implementation
+This task involves implementing and testing a local data source for caching products using SharedPreferences. It helps ensure the app works offline or loads temporary data while fetching from the server.
 
-This Flutter eCommerce app demonstrates a robust implementation following **Clean Architecture** principles and **Test-Driven Development (TDD)**. The app supports full CRUD (Create, Read, Update, Delete) operations for products, with smart data fetching depending on network availability.
+✅ Features Implemented
+Created ProductLocalDataSourceImpl class to handle local storage of products.
 
----
+Used SharedPreferences to cache product lists as JSON strings.
 
-## What is Implemented so far
+Implemented methods to:
 
-### 1. Domain Layer
+Cache a list of products
 
-- **Product Entity:** Defined the core `Product` entity with fields `id`, `name`, `description`, `price`, and `imageUrl`.
-- **Use Cases:** Implemented use cases for:
-    - Creating a new product
-    - Reading (getting) a product by ID
-    - Updating an existing product
-    - Deleting a product
-- **Repository Contract:** Defined the abstract `ProductRepository` interface specifying the CRUD operations.
+Retrieve all cached products
 
-### 2. Data Layer
+Retrieve a single cached product by ID
 
-- **Models:** Created `ProductModel` to convert between domain entity and JSON (API data).
-- **Remote Data Source:** Implemented `ProductRemoteDataSourceImpl` to communicate with a REST API for product data.
-- **Local Data Source:** Implemented `ProductLocalDataSourceImpl` using `SharedPreferences` for caching products locally.
-- **Repository Implementation:** Implemented `ProductRepositoryImpl` that:
-    - Checks network connectivity via `NetworkInfo`
-    - Fetches from remote data source when online and caches data locally
-    - Fetches from local cache when offline
-    - Properly handles server and cache exceptions
+Handled edge cases (e.g., no cache) using a custom CacheException.
 
-### 3. Core Layer
+🧪 Unit Testing
+Created unit tests for:
 
-- **Error Handling:** Created custom exceptions (`ServerException`, `CacheException`) and failures (`ServerFailure`, `CacheFailure`, `NetworkFailure`).
-- **Network Info:** Implemented `NetworkInfo` using `InternetConnectionChecker` package to detect network availability.
+cacheProducts() – ensures products are stored locally.
 
-### 4. Testing
+getCachedProducts() – retrieves cached products or throws exception.
 
-- **Unit Tests:** Written tests for:
-    - Use cases
-    - Repository implementation (mocking remote and local data sources)
-    - NetworkInfo using Mockito for mocking connectivity
-- **Mocking:** Used `mockito` with `build_runner` to generate mocks for dependencies.
+getCachedProduct(String id) – retrieves a single product or throws exception.
 
----
-
-## How It Works
-
-- When a product-related operation is called, the repository checks the network status.
-- If online, it interacts with the remote API and caches the results locally.
-- If offline, it serves data from the local cache (if available).
-- Error handling ensures that server or cache failures are gracefully managed and propagated.
-
----
-
-
-
+Used mockito to mock SharedPreferences.
