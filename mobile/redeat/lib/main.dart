@@ -1,54 +1,60 @@
 import 'package:flutter/material.dart';
-import 'features/presentation/pages/add.dart';
-import 'features/presentation/pages/details.dart';
-import 'features/presentation/pages/home.dart';
-import 'features/presentation/pages/search.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/pages/splash_page.dart';
+import 'features/auth/presentation/pages/sign_in_page.dart';
+import 'features/auth/presentation/pages/sign_up_page.dart';
+import 'features/auth/presentation/pages/authenticated_home_page.dart';
+import 'features/auth/data/datasources/auth_local_data_source_impl.dart';
+import 'features/auth/data/datasources/auth_remote_data_source_impl.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/signup_usecase.dart';
+import 'features/auth/domain/usecases/logout_usecase.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
-  runApp(ProductManagementApp());
+  final sharedPreferences = await SharedPreferences.getInstance();
+  final httpClient = http.Client();
+
+  final authLocalDataSource = AuthLocalDataSourceImpl(sharedPreferences: sharedPreferences);
+  final authRemoteDataSource = AuthRemoteDataSourceImpl(client: httpClient);
+
+  final authRepository = AuthRepositoryImpl(
+    localDataSource: authLocalDataSource,
+    remoteDataSource: authRemoteDataSource,
+  );
+
+  runApp(MyApp(authRepository: authRepository));
 }
 
-class ProductManagementApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  final AuthRepositoryImpl authRepository;
+
+  const MyApp({Key? key, required this.authRepository}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Product Management',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return BlocProvider(
+      create: (_) => AuthBloc(
+        loginUsecase: LoginUseCase(authRepository),
+        signupusecase: SignupUseCase(authRepository),
+        logoutusecase: LogoutUseCase(authRepository),
       ),
-      home: HomePage(),
-      onGenerateRoute: (settings) {
-        if (settings.name == '/add') {
-          final args = settings.arguments as Map<String, dynamic>? ?? {};
-          final product = args['product'] as Map<String, dynamic>?;
-          return MaterialPageRoute(
-            builder: (context) => AddUpdatePage(
-              product: product,
-            ),
-          );
-        }
-
-        if (settings.name == '/details') {
-          final args = settings.arguments as Map<String, dynamic>? ?? {};
-          final product = args['product'] as Map<String, dynamic>? ?? {};
-          final onDelete = args['onDelete'] as Function()?;
-          return MaterialPageRoute(
-            builder: (context) => DetailsPage(
-              product: product,
-              onDelete: onDelete,
-            ),
-          );
-        }
-
-        if (settings.name == '/search') {
-          return MaterialPageRoute(builder: (context) => SearchPage());
-        }
-
-        return null;
-      },
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Ecommerce App',
+        initialRoute: '/',
+        routes: {
+          '/': (context) => SplashPage(),
+          '/signin': (context) => SignInPage(),
+          '/signup': (context) => SignUpPage(),
+          '/home': (context) => AuthenticatedHomePage(),
+        },
+      ),
     );
   }
 }
