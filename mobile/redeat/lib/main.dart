@@ -2,17 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/signup_usecase.dart';
+import 'features/auth/domain/usecases/logout_usecase.dart';
+
+import 'features/auth/data/datasources/auth_local_data_source_impl.dart';
+import 'features/auth/data/datasources/auth_remote_data_source_impl.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/auth/presentation/pages/sign_in_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
-import 'features/auth/presentation/pages/authenticated_home_page.dart';
-import 'features/auth/data/datasources/auth_local_data_source_impl.dart';
-import 'features/auth/data/datasources/auth_remote_data_source_impl.dart';
-import 'features/auth/data/repositories/auth_repository_impl.dart';
-import 'features/auth/domain/usecases/login_usecase.dart';
-import 'features/auth/domain/usecases/signup_usecase.dart';
-import 'features/auth/domain/usecases/logout_usecase.dart';
+import 'features/presentation/pages/home.dart';
+
+import 'features/presentation/pages/add.dart';
+import 'features/presentation/pages/search.dart';
+import 'features/presentation/pages/details.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +31,7 @@ void main() async {
   final authLocalDataSource = AuthLocalDataSourceImpl(sharedPreferences: sharedPreferences);
   final authRemoteDataSource = AuthRemoteDataSourceImpl(client: httpClient);
 
-  final authRepository = AuthRepositoryImpl(
+  final AuthRepository authRepository = AuthRepositoryImpl(
     localDataSource: authLocalDataSource,
     remoteDataSource: authRemoteDataSource,
   );
@@ -32,7 +40,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final AuthRepositoryImpl authRepository;
+  final AuthRepository authRepository;
 
   const MyApp({Key? key, required this.authRepository}) : super(key: key);
 
@@ -41,18 +49,59 @@ class MyApp extends StatelessWidget {
     return BlocProvider(
       create: (_) => AuthBloc(
         loginUsecase: LoginUseCase(authRepository),
-        signupusecase: SignupUseCase(authRepository),
-        logoutusecase: LogoutUseCase(authRepository),
+        signupUsecase: SignupUseCase(authRepository),
+        logoutUsecase: LogoutUseCase(authRepository),
       ),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Ecommerce App',
         initialRoute: '/',
-        routes: {
-          '/': (context) => SplashPage(),
-          '/signin': (context) => SignInPage(),
-          '/signup': (context) => SignUpPage(),
-          '/home': (context) => AuthenticatedHomePage(),
+        onGenerateRoute: (RouteSettings settings) {
+          switch (settings.name) {
+            case '/':
+              return MaterialPageRoute(builder: (_) => SplashPage());
+
+            case '/signin':
+              return MaterialPageRoute(builder: (_) => SignInPage());
+
+            case '/signup':
+              return MaterialPageRoute(builder: (_) => SignUpPage());
+
+            case '/home':
+              final args = settings.arguments as Map<String, dynamic>? ?? {};
+              final userName = args['userName'] as String? ?? '';
+              return MaterialPageRoute(builder: (_) => HomePage(userName: userName));
+
+            case '/add':
+              final args = settings.arguments as Map<String, dynamic>?;
+              final product = args != null ? args['product'] as Map<String, dynamic>? : null;
+              return MaterialPageRoute(builder: (_) => AddUpdatePage(product: product));
+
+            case '/search':
+              return MaterialPageRoute(builder: (_) => SearchPage());
+
+            case '/details':
+              final args = settings.arguments as Map<String, dynamic>?;
+              if (args == null || args['product'] == null) {
+                return MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    body: Center(child: Text('Product data not provided')),
+                  ),
+                );
+              }
+              final product = args['product'] as Map<String, dynamic>;
+              final onDelete = args['onDelete'] as Function()?;
+              return MaterialPageRoute(
+                builder: (_) => DetailsPage(product: product, onDelete: onDelete),
+              );
+
+            default:
+              return MaterialPageRoute(
+                builder: (_) => Scaffold(
+                  body: Center(child: Text('No route defined for ${settings.name}')),
+                ),
+              );
+          }
         },
       ),
     );

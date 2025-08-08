@@ -28,44 +28,57 @@ class _SignInPageState extends State<SignInPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.pushReplacementNamed(context, '/home');
+            final username = state.user.name ?? '';
+            Navigator.pushReplacementNamed(
+              context,
+              '/home',
+              arguments: {'userName': username},
+            );
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
           }
         },
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Email'),
-                  validator: (val) => val != null && val.contains('@') ? null : 'Invalid email',
-                  onSaved: (val) => _email = val ?? '',
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            if (state is AuthLoading) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            return Padding(
+              padding: EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Email'),
+                      validator: (val) => val != null && val.contains('@') ? null : 'Invalid email',
+                      onSaved: (val) => _email = val ?? '',
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Password'),
+                      obscureText: true,
+                      validator: (val) => val != null && val.length >= 6 ? null : 'Password too short',
+                      onSaved: (val) => _password = val ?? '',
+                    ),
+                    SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _onLoginButtonPressed,
+                      child: Text('Sign In'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/signup');
+                      },
+                      child: Text('Don\'t have an account? Sign Up'),
+                    )
+                  ],
                 ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  validator: (val) => val != null && val.length >= 6 ? null : 'Password too short',
-                  onSaved: (val) => _password = val ?? '',
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _onLoginButtonPressed,
-                  child: Text('Sign In'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/signup');
-                  },
-                  child: Text('Don\'t have an account? Sign Up'),
-                )
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
