@@ -47,38 +47,77 @@ class _SignUpPageState extends State<SignUpPage> {
               return Center(child: CircularProgressIndicator());
             }
 
-            return Padding(
-              padding: EdgeInsets.all(16),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Form(
                 key: _formKey,
-                child: ListView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Name',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 5),
                     TextFormField(
-                      decoration: InputDecoration(labelText: 'Name (optional)'),
+                      decoration: const InputDecoration(
+                        hintText: 'ex: Jon Smith',
+                        border: OutlineInputBorder(),
+                      ),
                       onSaved: (val) => _name = val,
                     ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Email',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 5),
                     TextFormField(
-                      decoration: InputDecoration(labelText: 'Email'),
+                      decoration: const InputDecoration(
+                        hintText: 'ex: jon.smith@email.com',
+                        border: OutlineInputBorder(),
+                      ),
                       validator: (val) => val != null && val.contains('@') ? null : 'Invalid email',
                       onSaved: (val) => _email = val ?? '',
                     ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Password',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 5),
                     TextFormField(
-                      decoration: InputDecoration(labelText: 'Password'),
                       obscureText: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
                       validator: (val) => val != null && val.length >= 6 ? null : 'Password too short',
                       onSaved: (val) => _password = val ?? '',
                     ),
-                    SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _onSignUpButtonPressed,
-                      child: Text('Sign Up'),
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _onSignUpButtonPressed,
+                        child: const Text(
+                          'SIGN UP',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/signin');
-                      },
-                      child: Text('Already have an account? Sign In'),
-                    )
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Have an account?'),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(context, '/signin');
+                          },
+                          child: const Text('SIGN IN'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':
-              return MaterialPageRoute(builder: (_) => SplashPage());
+              return MaterialPageRoute(builder: (_) => EcomHomeScreen());
 
             case '/signin':
               return MaterialPageRoute(builder: (_) => SignInPage());
