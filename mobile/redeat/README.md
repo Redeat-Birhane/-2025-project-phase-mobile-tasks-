@@ -1,27 +1,46 @@
-# Improve Code Organization and Reusability
+# Ecommerce Flutter App
 
-This update focuses on enhancing the maintainability and efficiency of the Ecommerce app by improving the overall code structure and promoting reusability.
+A fully functional Flutter ecommerce app with user authentication (sign-in/sign-up), product listing, search, add/update/delete products, and detailed product views. Built using **Flutter**, **Bloc pattern**, and clean architecture principles.
 
-## ✅ Refactor Summary
+---
 
-- Modularized data source layers:
-    - Local and Remote Data Source logic are separated.
-    - Error handling and constants extracted into dedicated files.
-- Improved folder structure aligning with feature-based organization.
-- Introduced reusable helper methods for JSON parsing and mapping.
-- Removed code duplication across remote and local data sources.
-- Reused Product entity across all layers using clean architecture principles.
+## Features
 
-## 🧪 Testing & Integration
+- **User Authentication**
+  - Sign Up (optional username)
+  - Sign In
+  - Persistent login with token storage
 
-- Verified full functionality for:
-    - Get all products
-    - Get single product by ID
-    - Create product
-    - Update product
-    - Delete product
-- Confirmed seamless switching between online and offline states via NetworkInfo.
-- Ensured backward compatibility and no feature regression after refactoring.
+- **Product Management**
+  - View product list with grid layout
+  - Add new products (including image picker)
+  - Update existing products
+  - Delete products with confirmation dialog
 
+- **Product Search and Filtering**
+  - Search by product name
+  - Filter by category and price range
+
+- **Responsive UI**
+  - Mobile-friendly and tablet-friendly layout
+
+- **State Management**
+  - Uses `flutter_bloc` for authentication and UI state
+
+---
+
+## Screenshots
+
+<img src="screenshots/home.png" width="300"/> <img src="screenshots/details.png" width="300"/>  
+<img src="screenshots/add.png" width="300"/> <img src="screenshots/search.png" width="300"/>
+
+## Getting Started
+
+### Prerequisites
+
+- Flutter SDK (>= 3.0.0)
+- Dart SDK
+- Android Studio or VS Code
+- Device or emulator
 
 

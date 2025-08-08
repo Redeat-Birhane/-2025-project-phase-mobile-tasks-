@@ -1,14 +1,14 @@
+import 'package:dartz/dartz.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/product.dart';
 import '../repositories/product_repository.dart';
-import 'usecase.dart';
 
-class InsertProductUseCase implements UseCase<void, Product> {
+class InsertProductUseCase {
   final ProductRepository repository;
 
   InsertProductUseCase(this.repository);
 
-  @override
-  Future<void> call(Product product) {
+  Future<Either<Failure, void>> call(Product product) {
     return repository.createProduct(product);
   }
 }

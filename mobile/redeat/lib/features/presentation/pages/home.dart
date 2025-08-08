@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import '../widgets/product_card.dart';
 
-
 class HomePage extends StatefulWidget {
+  final String userName;
+
+  const HomePage({Key? key, this.userName = ''}) : super(key: key);
+  static Route route(RouteSettings settings) {
+    final args = settings.arguments as Map<String, dynamic>? ?? {};
+    final userName = args['userName'] as String? ?? '';
+    return MaterialPageRoute(
+      builder: (_) => HomePage(userName: userName),
+    );
+  }
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -57,6 +66,8 @@ class _HomePageState extends State<HomePage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
+    final displayName = (widget.userName.trim().isEmpty) ? '-' : widget.userName;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -65,11 +76,11 @@ class _HomePageState extends State<HomePage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('July 14, 2023', style: TextStyle(fontSize: isMobile ? 12 : 14)),
                 Text(
-                  'Hello, Yohannes',
+                  'Hello, ${widget.userName.isNotEmpty ? widget.userName : '-'}',
                   style: TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
                 ),
+
               ],
             ),
             IconButton(

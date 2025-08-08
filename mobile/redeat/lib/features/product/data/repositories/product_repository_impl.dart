@@ -18,7 +18,6 @@ class ProductRepositoryImpl implements ProductRepository {
     required this.networkInfo,
   });
 
-
   @override
   Future<Either<Failure, List<Product>>> getAllProducts() async {
     if (await networkInfo.isConnected) {
@@ -39,7 +38,6 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
-
   @override
   Future<Either<Failure, Product>> getProductById(String id) async {
     if (await networkInfo.isConnected) {
@@ -59,7 +57,6 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
-
   @override
   Future<Either<Failure, void>> createProduct(Product product) async {
     if (await networkInfo.isConnected) {
@@ -74,7 +71,6 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
-
   @override
   Future<Either<Failure, void>> updateProduct(Product product) async {
     if (await networkInfo.isConnected) {
@@ -88,7 +84,6 @@ class ProductRepositoryImpl implements ProductRepository {
       return Left(NetworkFailure());
     }
   }
-
 
   @override
   Future<Either<Failure, void>> deleteProduct(String id) async {
