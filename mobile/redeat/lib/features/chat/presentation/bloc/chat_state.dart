@@ -13,7 +13,8 @@ class ChatLoading extends ChatState {}
 
 class ChatListLoaded extends ChatState {
   final List<Chat> chats;
-  const ChatListLoaded(this.chats);
+
+  ChatListLoaded(this.chats);
 
   @override
   List<Object?> get props => [chats];
@@ -21,7 +22,8 @@ class ChatListLoaded extends ChatState {
 
 class MessagesLoaded extends ChatState {
   final List<Message> messages;
-  const MessagesLoaded(this.messages);
+
+  MessagesLoaded(this.messages);
 
   @override
   List<Object?> get props => [messages];
@@ -29,8 +31,19 @@ class MessagesLoaded extends ChatState {
 
 class ChatError extends ChatState {
   final String message;
-  const ChatError(this.message);
+
+  ChatError(this.message);
 
   @override
   List<Object?> get props => [message];
+}
+
+
+class UserListLoaded extends ChatState {
+  final List<User> users;
+
+  UserListLoaded(this.users);
+
+  @override
+  List<Object?> get props => [users];
 }

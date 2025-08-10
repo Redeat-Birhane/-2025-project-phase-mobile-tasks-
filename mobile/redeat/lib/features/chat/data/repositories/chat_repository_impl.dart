@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as client;
+
 import '../../domain/entities/message.dart';
 import '../../domain/entities/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -6,7 +10,9 @@ import '../datasources/chat_remote_data_source.dart';
 class ChatRepositoryImpl implements ChatRepository {
   final ChatRemoteDataSource remoteDataSource;
 
-  ChatRepositoryImpl({required this.remoteDataSource});
+  ChatRepositoryImpl({
+    required this.remoteDataSource,
+  });
 
   @override
   Future<List<Chat>> getChatList() async {
@@ -30,6 +36,8 @@ class ChatRepositoryImpl implements ChatRepository {
     final chatModel = await remoteDataSource.initiateChat(userId);
     return chatModel.toEntity();
   }
+
+  // Removed getUserList()
 
   @override
   Future<void> deleteChat(String chatId) {

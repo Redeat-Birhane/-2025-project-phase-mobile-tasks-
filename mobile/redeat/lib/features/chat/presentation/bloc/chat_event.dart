@@ -48,3 +48,8 @@ class InitiateChat extends ChatEvent {
 }
 
 
+class LoadUserList extends ChatEvent {
+  @override
+  List<Object?> get props => [];
+}
+

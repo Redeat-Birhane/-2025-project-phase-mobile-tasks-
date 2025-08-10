@@ -3,34 +3,27 @@ import '../../domain/entities/user.dart';
 class UserModel extends User {
   UserModel({
     required String id,
-    String? name,
     required String email,
-    String? token,
-  }) : super(id: id, name: name, email: email, token: token);
+    String? name,
+  }) : super(id: id, email: email, name: name);
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] ?? json['_id'],
-      name: json['name'],
-      email: json['email'],
-      token: json['access_token'],
+      id: json['id'] as String,
+      email: json['email'] as String,
+      name: json['name'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
-      'name': name,
+      'id': id,
       'email': email,
-      'token': token,
+      'name': name,
     };
   }
+
   User toEntity() {
-    return User(
-      id: id,
-      name: name,
-      email: email,
-      token: token,
-    );
+    return User(id: id, email: email, name: name);
   }
 }
