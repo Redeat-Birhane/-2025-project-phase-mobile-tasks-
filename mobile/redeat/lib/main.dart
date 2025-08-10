@@ -17,7 +17,6 @@ import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/auth/presentation/pages/sign_in_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
 import 'features/presentation/pages/home.dart';
-
 import 'features/presentation/pages/add.dart';
 import 'features/presentation/pages/search.dart';
 import 'features/presentation/pages/details.dart';
@@ -28,7 +27,8 @@ void main() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   final httpClient = http.Client();
 
-  final authLocalDataSource = AuthLocalDataSourceImpl(sharedPreferences: sharedPreferences);
+  final authLocalDataSource =
+  AuthLocalDataSourceImpl(sharedPreferences: sharedPreferences);
   final authRemoteDataSource = AuthRemoteDataSourceImpl(client: httpClient);
 
   final AuthRepository authRepository = AuthRepositoryImpl(
@@ -70,37 +70,45 @@ class MyApp extends StatelessWidget {
             case '/home':
               final args = settings.arguments as Map<String, dynamic>? ?? {};
               final userName = args['userName'] as String? ?? '';
-              return MaterialPageRoute(builder: (_) => HomePage(userName: userName));
+              final userEmail = args['userEmail'] as String? ?? '';
+              return MaterialPageRoute(
+                  builder: (_) =>
+                      HomePage(userName: userName, userEmail: userEmail));
 
             case '/add':
-              final args = settings.arguments as Map<String, dynamic>?;
-              final product = args != null ? args['product'] as Map<String, dynamic>? : null;
-              return MaterialPageRoute(builder: (_) => AddUpdatePage(product: product));
+              final args = settings.arguments as Map<String, dynamic>? ?? {};
+              final product = args['product'] as Map<String, dynamic>?;
+              final userEmail = args['userEmail'] as String? ?? '';
+              return MaterialPageRoute(
+                  builder: (_) =>
+                      AddUpdatePage(product: product, userEmail: userEmail));
 
             case '/search':
-              return MaterialPageRoute(builder: (_) => SearchPage());
+              final args = settings.arguments as Map<String, dynamic>? ?? {};
+              final userEmail = args['userEmail'] as String? ?? '';
+              return MaterialPageRoute(
+                  builder: (_) => SearchPage(userEmail: userEmail));
 
             case '/details':
-              final args = settings.arguments as Map<String, dynamic>?;
-              if (args == null || args['product'] == null) {
-                return MaterialPageRoute(
-                  builder: (_) => Scaffold(
-                    body: Center(child: Text('Product data not provided')),
-                  ),
-                );
-              }
-              final product = args['product'] as Map<String, dynamic>;
+              final args = settings.arguments as Map<String, dynamic>? ?? {};
+              final product = args['product'] as Map<String, dynamic>?;
               final onDelete = args['onDelete'] as Function()?;
+              if (product == null) {
+                return MaterialPageRoute(
+                    builder: (_) => Scaffold(
+                      body: Center(child: Text('Product data not provided')),
+                    ));
+              }
               return MaterialPageRoute(
-                builder: (_) => DetailsPage(product: product, onDelete: onDelete),
-              );
+                  builder: (_) =>
+                      DetailsPage(product: product, onDelete: onDelete));
 
             default:
               return MaterialPageRoute(
-                builder: (_) => Scaffold(
-                  body: Center(child: Text('No route defined for ${settings.name}')),
-                ),
-              );
+                  builder: (_) => Scaffold(
+                    body: Center(
+                        child: Text('No route defined for ${settings.name}')),
+                  ));
           }
         },
       ),
