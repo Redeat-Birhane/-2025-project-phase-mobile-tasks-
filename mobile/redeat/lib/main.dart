@@ -112,7 +112,8 @@ class MyApp extends StatelessWidget {
             final args = settings.arguments as Map<String, dynamic>? ?? {};
             final userName = args['userName'] as String? ?? '';
             return MaterialPageRoute(
-                builder: (_) => AppGatewayPage(userName: userName));
+              builder: (_) => AppGatewayPage(userName: userName),
+            );
 
         // Product routes
           case '/home':
@@ -120,22 +121,23 @@ class MyApp extends StatelessWidget {
             final userName = args['userName'] as String? ?? '';
             final userEmail = args['userEmail'] as String? ?? '';
             return MaterialPageRoute(
-                builder: (_) =>
-                    HomePage(userName: userName, userEmail: userEmail));
+              builder: (_) => HomePage(userName: userName, userEmail: userEmail),
+            );
 
           case '/add':
             final args = settings.arguments as Map<String, dynamic>? ?? {};
             final product = args['product'] as Map<String, dynamic>?;
             final userEmail = args['userEmail'] as String? ?? '';
             return MaterialPageRoute(
-                builder: (_) =>
-                    AddUpdatePage(product: product, userEmail: userEmail));
+              builder: (_) => AddUpdatePage(product: product, userEmail: userEmail),
+            );
 
           case '/search':
             final args = settings.arguments as Map<String, dynamic>? ?? {};
             final userEmail = args['userEmail'] as String? ?? '';
             return MaterialPageRoute(
-                builder: (_) => SearchPage(userEmail: userEmail));
+              builder: (_) => SearchPage(userEmail: userEmail),
+            );
 
           case '/details':
             final args = settings.arguments as Map<String, dynamic>? ?? {};
@@ -143,26 +145,30 @@ class MyApp extends StatelessWidget {
             final onDelete = args['onDelete'] as Function()?;
             if (product == null) {
               return MaterialPageRoute(
-                  builder: (_) => Scaffold(
-                    body: Center(child: Text('Product data not provided')),
-                  ));
+                builder: (_) => Scaffold(
+                  body: Center(child: Text('Product data not provided')),
+                ),
+              );
             }
             return MaterialPageRoute(
-                builder: (_) => DetailsPage(product: product, onDelete: onDelete));
+              builder: (_) => DetailsPage(product: product, onDelete: onDelete),
+            );
 
         // Chat routes
           case '/chatList':
             final args = settings.arguments as Map<String, dynamic>? ?? {};
             final currentUserId = args['currentUserId'] as String? ?? '';
             return MaterialPageRoute(
-                builder: (_) => ChatListScreen(currentUserId: currentUserId));
+              builder: (_) => ChatListScreen(currentUserId: currentUserId),
+            );
+
 
           default:
             return MaterialPageRoute(
-                builder: (_) => Scaffold(
-                  body: Center(
-                      child: Text('No route defined for ${settings.name}')),
-                ));
+              builder: (_) => Scaffold(
+                body: Center(child: Text('No route defined for ${settings.name}')),
+              ),
+            );
         }
       },
     );
