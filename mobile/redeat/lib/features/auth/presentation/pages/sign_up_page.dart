@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../app_gateway/presentation/app_gateway_page.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -29,16 +30,14 @@ class _SignUpPageState extends State<SignUpPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            final username = state.user.name ?? '';
-            Navigator.pushReplacementNamed(
+            Navigator.pushReplacement(
               context,
-              '/home',
-              arguments: {'userName': username},
+              MaterialPageRoute(
+                builder: (_) => AppGatewayPage(userName: state.user.name ?? ''),
+              ),
             );
-          } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+          } else if (state is AuthUnauthenticated) {
+            Navigator.pushReplacementNamed(context, '/splashHome');
           }
         },
         child: BlocBuilder<AuthBloc, AuthState>(

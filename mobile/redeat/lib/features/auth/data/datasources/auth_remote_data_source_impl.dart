@@ -63,7 +63,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return User(id: '', name: '', email: '', token: token);
       }
       final user = UserModel.fromJson(jsonMap['data']);
-      user.token = token; // Attach token to user entity
+      user.token = token;
       return user;
     } else {
       throw ServerException(
