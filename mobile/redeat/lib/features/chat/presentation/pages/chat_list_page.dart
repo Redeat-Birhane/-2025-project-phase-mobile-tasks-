@@ -1,63 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import '../../../auth/data/local_user_storage.dart';
 import '../bloc/chat_bloc.dart';
 import 'chat_detail_page.dart';
-import '../../data/local_user_storage.dart';
 
-class ChatListScreen extends StatelessWidget {
+class ChatListScreen extends StatefulWidget {
   final String currentUserId;
 
   const ChatListScreen({super.key, required this.currentUserId});
 
-  void _showInitiateChatDialog(BuildContext context) async {
-    final registeredUsers = await LocalUserStorage.getRegisteredUsers();
+  @override
+  State<ChatListScreen> createState() => _ChatListScreenState();
+}
 
-    if (registeredUsers.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('No Registered Users'),
-          content: const Text('No users found to start a chat with.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
+class _ChatListScreenState extends State<ChatListScreen> {
+  List<Map<String, dynamic>> registeredUsers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRegisteredUsers();
+  }
+
+  Future<void> _loadRegisteredUsers() async {
+    final users = await LocalUserStorage.getRegisteredUsers();
+    setState(() {
+      registeredUsers = users
+          .where((user) => user['id']?.toString() != widget.currentUserId)
+          .toList();
+    });
+  }
+
+  void _showInitiateChatDialog(BuildContext context) {
+    String? selectedUserId;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Start New Chat'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: registeredUsers.length,
-              itemBuilder: (context, index) {
-                final user = registeredUsers[index];
-                return ListTile(
-                  title: Text(user['name'] ?? 'Unknown'),
-                  subtitle: Text(user['email'] ?? ''),
-                  onTap: () {
-                    context.read<ChatBloc>().add(InitiateChat(user['id']));
-                    Navigator.of(context).pop();
-                  },
-                );
-              },
-            ),
+          content: registeredUsers.isEmpty
+              ? const Text('No registered users available.')
+              : DropdownButtonFormField<String>(
+            items: registeredUsers
+                .map<DropdownMenuItem<String>>(
+                    (Map<String, dynamic> user) {
+                  final userId = user['id']?.toString() ?? '';
+                  final userName = user['name']?.toString() ?? 'Unknown';
+                  return DropdownMenuItem<String>(
+                    value: userId,
+                    child: Text(userName),
+                  );
+                }).toList(),
+            onChanged: (value) {
+              selectedUserId = value;
+            },
+            decoration:
+            const InputDecoration(labelText: 'Select a user'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedUserId != null && selectedUserId!.isNotEmpty) {
+                  context.read<ChatBloc>().add(InitiateChat(selectedUserId!));
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Start'),
             ),
           ],
         );
@@ -79,8 +92,8 @@ class ChatListScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => ChatDetailScreen(
                     chatId: newChat.id,
-                    chatName: newChat.getName(currentUserId),
-                    currentUserId: currentUserId,
+                    chatName: newChat.getName(widget.currentUserId),
+                    currentUserId: widget.currentUserId,
                   ),
                 ),
               );
@@ -97,7 +110,7 @@ class ChatListScreen extends StatelessWidget {
                 itemCount: chats.length,
                 itemBuilder: (context, index) {
                   final chat = chats[index];
-                  final displayName = chat.getName(currentUserId);
+                  final displayName = chat.getName(widget.currentUserId);
                   return ListTile(
                     leading: CircleAvatar(
                       child: Text(
@@ -106,7 +119,8 @@ class ChatListScreen extends StatelessWidget {
                             : '?',
                       ),
                     ),
-                    title: Text(displayName.isNotEmpty ? displayName : 'Unknown'),
+                    title: Text(
+                        displayName.isNotEmpty ? displayName : 'Unknown'),
                     subtitle: Text(chat.lastMessage ?? ''),
                     trailing: (chat.unreadCount ?? 0) > 0
                         ? CircleAvatar(
@@ -124,8 +138,10 @@ class ChatListScreen extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (_) => ChatDetailScreen(
                             chatId: chat.id,
-                            chatName: displayName.isNotEmpty ? displayName : 'Unknown',
-                            currentUserId: currentUserId,
+                            chatName: displayName.isNotEmpty
+                                ? displayName
+                                : 'Unknown',
+                            currentUserId: widget.currentUserId,
                           ),
                         ),
                       );
