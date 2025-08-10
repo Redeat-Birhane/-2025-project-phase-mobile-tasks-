@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 
 class AddUpdatePage extends StatefulWidget {
   final Map<String, dynamic>? product;
+  final String userEmail;
 
-  const AddUpdatePage({Key? key, this.product}) : super(key: key);
+  const AddUpdatePage({Key? key, this.product, required this.userEmail})
+      : super(key: key);
 
   @override
   _AddUpdatePageState createState() => _AddUpdatePageState();
@@ -13,61 +15,54 @@ class AddUpdatePage extends StatefulWidget {
 
 class _AddUpdatePageState extends State<AddUpdatePage> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _priceController;
-  late TextEditingController _categoryController;
-  late TextEditingController _descriptionController;
+  late String _name;
+  late double _price;
+  late String _category;
+  late String _description;
+  late List<int> _sizes;
+  String _imagePath = 'assets/images/shoe.jpg';
 
-  double _rating = 0;
-  List<int> _sizes = [];
-
-  XFile? _pickedImage;
-  final ImagePicker _picker = ImagePicker();
+  final List<String> _categories = ['Leather', 'Sneakers', 'Formal', 'Casual'];
+  final List<int> _availableSizes = [39, 40, 41, 42, 43, 44];
 
   @override
   void initState() {
     super.initState();
     final product = widget.product;
-    _nameController = TextEditingController(text: product?['name'] ?? '');
-    _priceController = TextEditingController(text: product?['price']?.toString() ?? '');
-    _categoryController = TextEditingController(text: product?['category'] ?? '');
-    _descriptionController = TextEditingController(text: product?['description'] ?? '');
-    _rating = product?['rating'] ?? 0;
-    _sizes = List<int>.from(product?['sizes'] ?? []);
-  }
-
-  Future<void> _pickImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        _pickedImage = picked;
-      });
+    if (product != null) {
+      _name = product['name'] ?? '';
+      _price = (product['price'] ?? 0).toDouble();
+      _category = product['category'] ?? _categories.first;
+      _description = product['description'] ?? '';
+      _sizes = List<int>.from(product['sizes'] ?? _availableSizes);
+      _imagePath = product['image'] ?? _imagePath;
+    } else {
+      _name = '';
+      _price = 0;
+      _category = _categories.first;
+      _description = '';
+      _sizes = [];
     }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _priceController.dispose();
-    _categoryController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      final productData = {
-        'id': widget.product?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        'name': _nameController.text.trim(),
-        'price': double.tryParse(_priceController.text.trim()) ?? 0.0,
-        'category': _categoryController.text.trim(),
-        'rating': _rating,
-        'description': _descriptionController.text.trim(),
+      _formKey.currentState!.save();
+
+      final product = widget.product;
+      final updatedProduct = <String, dynamic>{
+        'id': product != null ? product['id'] : DateTime.now().millisecondsSinceEpoch.toString(),
+        'name': _name,
+        'price': _price,
+        'category': _category,
+        'description': _description,
         'sizes': _sizes,
-        'image': _pickedImage?.path ?? widget.product?['image'] ?? 'assets/images/shoe.jpg',
+        'image': _imagePath,
+        'owner': widget.userEmail,
+        'rating': product != null ? product['rating'] ?? 0.0 : 0.0,
       };
 
-      Navigator.pop(context, productData); // Return updated/new product
+      Navigator.pop(context, updatedProduct);
     }
   }
 
@@ -79,76 +74,93 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.product == null ? 'Add Product' : 'Update Product'),
+        centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: isMobile ? 150 : 250,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey[300],
-                    image: _pickedImage != null
-                        ? DecorationImage(
-                      image: FileImage(File(_pickedImage!.path)),
-                      fit: BoxFit.cover,
-                    )
-                        : widget.product != null && widget.product!['image'] != null
-                        ? DecorationImage(
-                      image: widget.product!['image'].toString().startsWith('assets/')
-                          ? AssetImage(widget.product!['image']) as ImageProvider
-                          : FileImage(File(widget.product!['image'])),
-                      fit: BoxFit.cover,
-                    )
-                        : null,
-                  ),
-                  child: _pickedImage == null &&
-                      (widget.product == null || widget.product!['image'] == null)
-                      ? Center(
-                    child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey[700]),
-                  )
-                      : null,
-                ),
-              ),
-              SizedBox(height: isMobile ? 12 : 16),
+
               TextFormField(
-                controller: _nameController,
+                initialValue: _name,
                 decoration: InputDecoration(labelText: 'Product Name'),
-                validator: (value) =>
-                (value == null || value.isEmpty) ? 'Please enter a name' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter product name' : null,
+                onSaved: (val) => _name = val ?? '',
               ),
               SizedBox(height: isMobile ? 12 : 16),
+
+
               TextFormField(
-                controller: _priceController,
+                initialValue: _price.toString(),
                 decoration: InputDecoration(labelText: 'Price'),
-                validator: (value) =>
-                (value == null || value.isEmpty) ? 'Please enter a price' : null,
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Enter price';
+                  if (double.tryParse(val) == null) return 'Enter a valid number';
+                  return null;
+                },
+                onSaved: (val) => _price = double.parse(val ?? '0'),
               ),
               SizedBox(height: isMobile ? 12 : 16),
-              TextFormField(
-                controller: _categoryController,
+
+
+              DropdownButtonFormField<String>(
+                value: _category,
                 decoration: InputDecoration(labelText: 'Category'),
-                validator: (value) =>
-                (value == null || value.isEmpty) ? 'Please enter a category' : null,
+                items: _categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _category = val);
+                },
               ),
               SizedBox(height: isMobile ? 12 : 16),
+
+              // Sizes (multi-select)
+              Text(
+                'Sizes',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: isMobile ? 16 : 18),
+              ),
+              Wrap(
+                spacing: 8,
+                children: _availableSizes.map((size) {
+                  final selected = _sizes.contains(size);
+                  return FilterChip(
+                    label: Text(size.toString()),
+                    selected: selected,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _sizes.add(size);
+                        } else {
+                          _sizes.remove(size);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: isMobile ? 12 : 16),
+
+
               TextFormField(
-                controller: _descriptionController,
+                initialValue: _description,
                 decoration: InputDecoration(labelText: 'Description'),
                 maxLines: 3,
+                onSaved: (val) => _description = val ?? '',
               ),
-              SizedBox(height: isMobile ? 12 : 16),
+              SizedBox(height: isMobile ? 24 : 32),
+
               ElevatedButton(
                 onPressed: _submit,
                 child: Text(widget.product == null ? 'Add Product' : 'Update Product'),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: isMobile ? 14 : 16),
+                  padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
                 ),
               ),
             ],

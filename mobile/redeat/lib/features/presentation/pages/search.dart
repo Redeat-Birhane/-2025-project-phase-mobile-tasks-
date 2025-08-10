@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/product_card.dart';
 
 class SearchPage extends StatefulWidget {
+  final String userEmail;
+
+  const SearchPage({Key? key, required this.userEmail}) : super(key: key);
+
   @override
   _SearchPageState createState() => _SearchPageState();
 }
@@ -12,8 +16,7 @@ class _SearchPageState extends State<SearchPage> {
   double _minPrice = 0;
   double _maxPrice = 200;
 
-  // Sample product list (replace or integrate with your actual products)
-  final List<Map<String, dynamic>> _allProducts = [
+  List<Map<String, dynamic>> _allProducts = [
     {
       'id': '1',
       'name': 'Derby Leather Shoes',
@@ -23,6 +26,7 @@ class _SearchPageState extends State<SearchPage> {
       'rating': 4.0,
       'sizes': [39, 40, 41, 42, 43, 44],
       'image': 'assets/images/shoe.jpg',
+      'owner': 'demo@example.com',
     },
     {
       'id': '2',
@@ -33,6 +37,7 @@ class _SearchPageState extends State<SearchPage> {
       'rating': 4.5,
       'sizes': [40, 41, 42, 43],
       'image': 'assets/images/shoe.jpg',
+      'owner': 'demo@example.com',
     },
     {
       'id': '3',
@@ -43,6 +48,7 @@ class _SearchPageState extends State<SearchPage> {
       'rating': 4.2,
       'sizes': [40, 41, 42],
       'image': 'assets/images/shoe.jpg',
+      'owner': 'demo@example.com',
     },
     {
       'id': '4',
@@ -53,6 +59,7 @@ class _SearchPageState extends State<SearchPage> {
       'rating': 4.1,
       'sizes': [39, 40, 41],
       'image': 'assets/images/shoe.jpg',
+      'owner': 'demo@example.com',
     },
   ];
 
@@ -61,6 +68,10 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
+
+    _allProducts = _allProducts
+        .where((p) => p['owner'] == widget.userEmail)
+        .toList();
     _filteredProducts = List.from(_allProducts);
   }
 
@@ -74,7 +85,8 @@ class _SearchPageState extends State<SearchPage> {
         final price = product['price'] as num;
 
         final matchesQuery = query.isEmpty || name.contains(query);
-        final matchesCategory = _selectedCategory.isEmpty || category == _selectedCategory.toLowerCase();
+        final matchesCategory =
+            _selectedCategory.isEmpty || category == _selectedCategory.toLowerCase();
         final matchesPrice = price >= _minPrice && price <= _maxPrice;
 
         return matchesQuery && matchesCategory && matchesPrice;
@@ -114,7 +126,6 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -132,11 +143,10 @@ class _SearchPageState extends State<SearchPage> {
               onSubmitted: (_) => _applyFilters(),
             ),
             SizedBox(height: isMobile ? 16 : 24),
-
-
             Text(
               'Category',
-              style: TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
+              style:
+              TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Wrap(
@@ -155,11 +165,10 @@ class _SearchPageState extends State<SearchPage> {
               }).toList(),
             ),
             SizedBox(height: isMobile ? 16 : 24),
-
-            // Price Range filter
             Text(
               'Price Range',
-              style: TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
+              style:
+              TextStyle(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
             ),
             RangeSlider(
               values: RangeValues(_minPrice, _maxPrice),
@@ -176,15 +185,12 @@ class _SearchPageState extends State<SearchPage> {
               },
             ),
             SizedBox(height: isMobile ? 16 : 24),
-
-
             Text(
               'Results (${_filteredProducts.length})',
-              style: TextStyle(fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold),
+              style:
+              TextStyle(fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: isMobile ? 12 : 16),
-
-
             Expanded(
               child: _filteredProducts.isEmpty
                   ? Center(child: Text('No products found'))
@@ -208,15 +214,18 @@ class _SearchPageState extends State<SearchPage> {
                           'product': product,
                           'onDelete': () {
                             setState(() {
-                              _allProducts.removeWhere((p) => p['id'] == product['id']);
+                              _allProducts.removeWhere(
+                                      (p) => p['id'] == product['id']);
                               _applyFilters();
                             });
                             Navigator.pop(context);
                           },
                         },
                       ).then((updatedProduct) {
-                        if (updatedProduct != null && updatedProduct is Map<String, dynamic>) {
-                          final idx = _allProducts.indexWhere((p) => p['id'] == updatedProduct['id']);
+                        if (updatedProduct != null &&
+                            updatedProduct is Map<String, dynamic>) {
+                          final idx = _allProducts
+                              .indexWhere((p) => p['id'] == updatedProduct['id']);
                           if (idx != -1) {
                             setState(() {
                               _allProducts[idx] = updatedProduct;

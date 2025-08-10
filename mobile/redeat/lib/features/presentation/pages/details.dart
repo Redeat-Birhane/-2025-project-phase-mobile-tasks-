@@ -153,7 +153,7 @@ class DetailsPage extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/add',
-                          arguments: {'product': product},
+                          arguments: {'product': product, 'userEmail': product['owner']},
                         ).then((updatedProduct) {
                           if (updatedProduct != null && updatedProduct is Map<String, dynamic>) {
                             Navigator.pop(context, updatedProduct);
