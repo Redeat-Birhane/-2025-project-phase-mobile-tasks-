@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
@@ -13,10 +15,10 @@ import 'features/auth/data/datasources/auth_remote_data_source_impl.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/auth/presentation/pages/sign_in_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
 
+import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/presentation/pages/home.dart';
 import 'features/presentation/pages/add.dart';
 import 'features/presentation/pages/search.dart';
@@ -33,7 +35,7 @@ import 'features/chat/domain/usecases/send_message_usecase.dart';
 import 'features/chat/presentation/bloc/chat_bloc.dart';
 import 'features/chat/presentation/pages/chat_list_page.dart';
 
-import 'core/constants/api_constants.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,11 +56,18 @@ void main() async {
   // Chat data source and repository
   final chatRemoteDataSource = ChatRemoteDataSourceImpl(
     client: httpClient,
-    baseUrl: ApiConstants.baseUrlV3,
-    tokenProvider: () async => sharedPreferences.getString('auth_token') ?? '',
+    tokenProvider: () async {
+      final userJson = sharedPreferences.getString('CACHED_USER');
+      if (userJson == null) return '';
+      final userMap = json.decode(userJson);
+      return userMap['token'] ?? '';
+    },
   );
 
-  final chatRepository = ChatRepositoryImpl(remoteDataSource: chatRemoteDataSource);
+
+
+  final chatRepository =
+  ChatRepositoryImpl(remoteDataSource: chatRemoteDataSource);
 
   // Initialize Blocs
   final authBloc = AuthBloc(
@@ -121,7 +130,8 @@ class MyApp extends StatelessWidget {
             final userName = args['userName'] as String? ?? '';
             final userEmail = args['userEmail'] as String? ?? '';
             return MaterialPageRoute(
-              builder: (_) => HomePage(userName: userName, userEmail: userEmail),
+              builder: (_) =>
+                  HomePage(userName: userName, userEmail: userEmail),
             );
 
           case '/add':
@@ -129,7 +139,8 @@ class MyApp extends StatelessWidget {
             final product = args['product'] as Map<String, dynamic>?;
             final userEmail = args['userEmail'] as String? ?? '';
             return MaterialPageRoute(
-              builder: (_) => AddUpdatePage(product: product, userEmail: userEmail),
+              builder: (_) =>
+                  AddUpdatePage(product: product, userEmail: userEmail),
             );
 
           case '/search':
@@ -151,7 +162,8 @@ class MyApp extends StatelessWidget {
               );
             }
             return MaterialPageRoute(
-              builder: (_) => DetailsPage(product: product, onDelete: onDelete),
+              builder: (_) =>
+                  DetailsPage(product: product, onDelete: onDelete),
             );
 
         // Chat routes
@@ -159,14 +171,15 @@ class MyApp extends StatelessWidget {
             final args = settings.arguments as Map<String, dynamic>? ?? {};
             final currentUserId = args['currentUserId'] as String? ?? '';
             return MaterialPageRoute(
-              builder: (_) => ChatListScreen(currentUserId: currentUserId),
+              builder: (_) =>
+                  ChatListScreen(currentUserId: currentUserId),
             );
-
 
           default:
             return MaterialPageRoute(
               builder: (_) => Scaffold(
-                body: Center(child: Text('No route defined for ${settings.name}')),
+                body: Center(
+                    child: Text('No route defined for ${settings.name}')),
               ),
             );
         }

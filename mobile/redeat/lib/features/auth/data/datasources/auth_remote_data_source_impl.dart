@@ -74,7 +74,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<User> login(String email, String password) async {
-    print('🌀 [AuthRemote] Login called');
+    print('[AuthRemote] Login called');
     try {
       final token = await loginAndGetToken(email, password);
       final user = await getUserProfile(token);
@@ -87,7 +87,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<User> signup(String email, String password, {String? name}) async {
-    final url = Uri.parse('${ApiConstants.baseUrlV2}/auth/register');
+    final url = Uri.parse('${ApiConstants.baseUrlV2}/auth/register');  // Updated to baseUrlV2
     final body = {
       'email': email,
       'password': password,
