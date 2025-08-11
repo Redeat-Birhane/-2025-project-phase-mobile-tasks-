@@ -82,7 +82,7 @@ void main() async {
         BlocProvider<AuthBloc>.value(value: authBloc),
         BlocProvider<ChatBloc>.value(value: chatBloc),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }

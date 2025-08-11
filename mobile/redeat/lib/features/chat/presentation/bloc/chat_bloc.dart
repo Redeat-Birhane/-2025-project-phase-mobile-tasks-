@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../auth/domain/entities/user.dart';
 import '../../domain/entities/chat.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/usecases/delete_chat_usecase.dart';
@@ -39,11 +40,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<DeleteChat>(_onDeleteChat);
     on<InitiateChat>(_onInitiateChat);
 
-
     _messageSubscription = chatRepository.messageStream.listen((message) {
       add(_NewMessageReceived(message));
     });
-
 
     chatRepository.connectSocket();
   }

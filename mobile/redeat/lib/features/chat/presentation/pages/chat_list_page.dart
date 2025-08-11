@@ -4,21 +4,52 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/chat_bloc.dart';
 import 'chat_detail_page.dart';
 
-class ChatListScreen extends StatelessWidget {
+class ChatListScreen extends StatefulWidget {
   final String currentUserId;
 
   const ChatListScreen({super.key, required this.currentUserId});
 
+  @override
+  State<ChatListScreen> createState() => _ChatListScreenState();
+}
+
+class _ChatListScreenState extends State<ChatListScreen> {
+  String? selectedUserId;
+
+  // Hardcoded list of users for demo purposes
+  final List<Map<String, String>> users = [
+    {'id': 'user1', 'name': 'Alice'},
+    {'id': 'user2', 'name': 'Bob'},
+    {'id': 'user3', 'name': 'Charlie'},
+    {'id': 'user4', 'name': 'Diana'},
+  ];
+
   void _showInitiateChatDialog(BuildContext context) {
-    final TextEditingController _userIdController = TextEditingController();
+    setState(() {
+      selectedUserId = null;
+    });
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Start New Chat'),
-        content: TextField(
-          controller: _userIdController,
-          decoration: const InputDecoration(hintText: 'Enter User ID'),
+        content: DropdownButtonFormField<String>(
+          value: selectedUserId,
+          items: users
+              .where((u) => u['id'] != widget.currentUserId) // exclude self
+              .map((user) => DropdownMenuItem<String>(
+            value: user['id'],
+            child: Text(user['name']!),
+          ))
+              .toList(),
+          onChanged: (value) {
+            setState(() {
+              selectedUserId = value;
+            });
+          },
+          decoration: const InputDecoration(
+            labelText: 'Select User',
+          ),
         ),
         actions: [
           TextButton(
@@ -26,12 +57,11 @@ class ChatListScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              final userId = _userIdController.text.trim();
-              if (userId.isNotEmpty) {
-                context.read<ChatBloc>().add(InitiateChat(userId));
-                Navigator.of(context).pop();
-              }
+            onPressed: selectedUserId == null
+                ? null
+                : () {
+              context.read<ChatBloc>().add(InitiateChat(selectedUserId!));
+              Navigator.of(context).pop();
             },
             child: const Text('Start'),
           ),
@@ -54,8 +84,8 @@ class ChatListScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => ChatDetailScreen(
                     chatId: newChat.id,
-                    chatName: newChat.getName(currentUserId),
-                    currentUserId: currentUserId,
+                    chatName: newChat.getName(widget.currentUserId),
+                    currentUserId: widget.currentUserId,
                   ),
                 ),
               );
@@ -72,7 +102,7 @@ class ChatListScreen extends StatelessWidget {
                 itemCount: chats.length,
                 itemBuilder: (context, index) {
                   final chat = chats[index];
-                  final displayName = chat.getName(currentUserId);
+                  final displayName = chat.getName(widget.currentUserId);
                   return ListTile(
                     leading: CircleAvatar(child: Text(displayName.substring(0, 1))),
                     title: Text(displayName),
@@ -94,7 +124,7 @@ class ChatListScreen extends StatelessWidget {
                           builder: (_) => ChatDetailScreen(
                             chatId: chat.id,
                             chatName: displayName,
-                            currentUserId: currentUserId,
+                            currentUserId: widget.currentUserId,
                           ),
                         ),
                       );
