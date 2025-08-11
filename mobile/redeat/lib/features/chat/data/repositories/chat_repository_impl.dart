@@ -33,11 +33,18 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<Chat> initiateChat(String userId) async {
-    final chatModel = await remoteDataSource.initiateChat(userId);
-    return chatModel.toEntity();
+    try {
+      final chatModel = await remoteDataSource.initiateChat(userId);
+      return chatModel.toEntity();
+    } catch (e, stackTrace) {
+      print('Error initiating chat with userId=$userId: $e');
+      print(stackTrace);
+      rethrow;
+    }
   }
 
-  // Removed getUserList()
+
+
 
   @override
   Future<void> deleteChat(String chatId) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import '../../../auth/data/local_user_storage.dart';
 import '../bloc/chat_bloc.dart';
 import 'chat_detail_page.dart';
 
@@ -14,59 +14,67 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  String? selectedUserId;
+  List<Map<String, dynamic>> registeredUsers = [];
 
-  // Hardcoded list of users for demo purposes
-  final List<Map<String, String>> users = [
-    {'id': 'user1', 'name': 'Alice'},
-    {'id': 'user2', 'name': 'Bob'},
-    {'id': 'user3', 'name': 'Charlie'},
-    {'id': 'user4', 'name': 'Diana'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadRegisteredUsers();
+  }
+
+  Future<void> _loadRegisteredUsers() async {
+    final users = await LocalUserStorage.getRegisteredUsers();
+    setState(() {
+      registeredUsers = users
+          .where((user) => user['id']?.toString() != widget.currentUserId)
+          .toList();
+    });
+  }
 
   void _showInitiateChatDialog(BuildContext context) {
-    setState(() {
-      selectedUserId = null;
-    });
+    String? selectedUserId;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Start New Chat'),
-        content: DropdownButtonFormField<String>(
-          value: selectedUserId,
-          items: users
-              .where((u) => u['id'] != widget.currentUserId) // exclude self
-              .map((user) => DropdownMenuItem<String>(
-            value: user['id'],
-            child: Text(user['name']!),
-          ))
-              .toList(),
-          onChanged: (value) {
-            setState(() {
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Start New Chat'),
+          content: registeredUsers.isEmpty
+              ? const Text('No registered users available.')
+              : DropdownButtonFormField<String>(
+            items: registeredUsers
+                .map<DropdownMenuItem<String>>(
+                    (Map<String, dynamic> user) {
+                  final userId = user['id']?.toString() ?? '';
+                  final userName = user['name']?.toString() ?? 'Unknown';
+                  return DropdownMenuItem<String>(
+                    value: userId,
+                    child: Text(userName),
+                  );
+                }).toList(),
+            onChanged: (value) {
               selectedUserId = value;
-            });
-          },
-          decoration: const InputDecoration(
-            labelText: 'Select User',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: selectedUserId == null
-                ? null
-                : () {
-              context.read<ChatBloc>().add(InitiateChat(selectedUserId!));
-              Navigator.of(context).pop();
             },
-            child: const Text('Start'),
+            decoration:
+            const InputDecoration(labelText: 'Select a user'),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedUserId != null && selectedUserId!.isNotEmpty) {
+                  context.read<ChatBloc>().add(InitiateChat(selectedUserId!));
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Start'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -104,8 +112,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   final chat = chats[index];
                   final displayName = chat.getName(widget.currentUserId);
                   return ListTile(
-                    leading: CircleAvatar(child: Text(displayName.substring(0, 1))),
-                    title: Text(displayName),
+                    leading: CircleAvatar(
+                      child: Text(
+                        displayName.isNotEmpty
+                            ? displayName.substring(0, 1).toUpperCase()
+                            : '?',
+                      ),
+                    ),
+                    title: Text(
+                        displayName.isNotEmpty ? displayName : 'Unknown'),
                     subtitle: Text(chat.lastMessage ?? ''),
                     trailing: (chat.unreadCount ?? 0) > 0
                         ? CircleAvatar(
@@ -123,7 +138,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         MaterialPageRoute(
                           builder: (_) => ChatDetailScreen(
                             chatId: chat.id,
-                            chatName: displayName,
+                            chatName: displayName.isNotEmpty
+                                ? displayName
+                                : 'Unknown',
                             currentUserId: widget.currentUserId,
                           ),
                         ),

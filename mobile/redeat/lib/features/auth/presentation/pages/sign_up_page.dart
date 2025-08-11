@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../app_gateway/presentation/app_gateway_page.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+
+import '../../data/local_user_storage.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -28,8 +31,15 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       appBar: AppBar(title: Text('Sign Up')),
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is AuthAuthenticated) {
+            // Save user locally after successful signup
+            await LocalUserStorage.addRegisteredUser({
+              'id': state.user.id,
+              'name': state.user.name ?? '',
+              'email': state.user.email,
+            });
+
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
