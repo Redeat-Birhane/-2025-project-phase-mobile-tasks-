@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../auth/domain/entities/user.dart';
 import '../../domain/entities/chat.dart';
@@ -24,6 +25,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final InitiateChatUseCase initiateChatUseCase;
 
   late final StreamSubscription<Message> _messageSubscription;
+
+  final _uuid = Uuid();
 
   ChatBloc({
     required this.chatRepository,
@@ -71,10 +74,36 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSendMessage(
       SendMessage event, Emitter<ChatState> emit) async {
-    try {
-      await sendMessageUseCase(event.chatId, event.content, event.type);
-    } catch (e) {
-      emit(ChatError(e.toString()));
+    if (state is MessagesLoaded) {
+      final currentMessages = List<Message>.from((state as MessagesLoaded).messages);
+
+
+      final tempMessage = Message(
+        id: _uuid.v4(),
+        chatId: event.chatId,
+        content: event.content,
+        senderId: event.senderId,
+        timestamp: DateTime.now(),
+        status: MessageStatus.sending,
+      );
+
+
+      currentMessages.add(tempMessage);
+      emit(MessagesLoaded(currentMessages));
+
+      try {
+        await sendMessageUseCase(event.chatId, event.content, event.type);
+
+      } catch (e) {
+
+        final failedMessages = currentMessages.map((msg) {
+          if (msg.id == tempMessage.id) {
+            return msg.copyWith(status: MessageStatus.failed);
+          }
+          return msg;
+        }).toList();
+        emit(MessagesLoaded(failedMessages));
+      }
     }
   }
 
@@ -82,7 +111,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _NewMessageReceived event, Emitter<ChatState> emit) {
     if (state is MessagesLoaded) {
       final currentMessages = List<Message>.from((state as MessagesLoaded).messages);
-      currentMessages.add(event.message);
+
+
+      final index = currentMessages.indexWhere((msg) =>
+      msg.id == event.message.id ||
+          (msg.status == MessageStatus.sending &&
+              msg.content == event.message.content &&
+              msg.senderId == event.message.senderId));
+
+      if (index != -1) {
+
+        currentMessages[index] = event.message.copyWith(status: MessageStatus.sent);
+      } else {
+
+        currentMessages.add(event.message);
+      }
+
       emit(MessagesLoaded(currentMessages));
     }
   }
@@ -114,12 +158,4 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     chatRepository.disconnectSocket();
     return super.close();
   }
-}
-
-class _NewMessageReceived extends ChatEvent {
-  final Message message;
-  _NewMessageReceived(this.message);
-
-  @override
-  List<Object?> get props => [message];
 }

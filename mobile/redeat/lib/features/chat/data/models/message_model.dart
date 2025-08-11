@@ -8,6 +8,7 @@ class MessageModel {
   final ChatModel chat;
   final String content;
   final String type;
+  final DateTime timestamp;
 
   MessageModel({
     required this.id,
@@ -15,6 +16,7 @@ class MessageModel {
     required this.chat,
     required this.content,
     required this.type,
+    required this.timestamp,
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
@@ -24,16 +26,20 @@ class MessageModel {
       chat: ChatModel.fromJson(json['chat']),
       content: json['content'] ?? '',
       type: json['type'] ?? '',
+      timestamp: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
   Message toEntity() {
     return Message(
       id: id,
-      sender: sender.toEntity(),
-      chat: chat.toEntity(),
+      chatId: chat.id,
       content: content,
-      type: type,
+      senderId: sender.id,
+      timestamp: timestamp,
+      status: MessageStatus.sent,
     );
   }
 
@@ -44,6 +50,7 @@ class MessageModel {
       'chat': chat.toJson(),
       'content': content,
       'type': type,
+      'createdAt': timestamp.toIso8601String(),
     };
   }
 }
