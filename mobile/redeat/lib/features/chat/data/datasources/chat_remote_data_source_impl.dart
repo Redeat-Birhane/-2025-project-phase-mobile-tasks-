@@ -152,6 +152,14 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       final message = MessageModel.fromJson(data);
       _messageController.add(message);
     });
+    _socket.on('message:delivered', (data) {
+      final message = MessageModel.fromJson(data);
+      _messageController.add(message);
+    });
+
+
+
+
   }
 
   @override

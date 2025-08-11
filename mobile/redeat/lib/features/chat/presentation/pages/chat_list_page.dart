@@ -20,6 +20,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void initState() {
     super.initState();
     _loadRegisteredUsers();
+    context.read<ChatBloc>().add(LoadChatList());
   }
 
   Future<void> _loadRegisteredUsers() async {
@@ -42,8 +43,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           content: registeredUsers.isEmpty
               ? const Text('No registered users available.')
               : DropdownButtonFormField<String>(
-            items: registeredUsers
-                .map<DropdownMenuItem<String>>(
+            items: registeredUsers.map<DropdownMenuItem<String>>(
                     (Map<String, dynamic> user) {
                   final userId = user['id']?.toString() ?? '';
                   final userName = user['name']?.toString() ?? 'Unknown';
@@ -55,8 +55,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             onChanged: (value) {
               selectedUserId = value;
             },
-            decoration:
-            const InputDecoration(labelText: 'Select a user'),
+            decoration: const InputDecoration(labelText: 'Select a user'),
           ),
           actions: [
             TextButton(
@@ -82,80 +81,61 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Chats')),
-      body: BlocListener<ChatBloc, ChatState>(
-        listener: (context, state) {
-          if (state is ChatListLoaded) {
-            final newChat = state.chats.isNotEmpty ? state.chats.last : null;
-            if (newChat != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChatDetailScreen(
-                    chatId: newChat.id,
-                    chatName: newChat.getName(widget.currentUserId),
-                    currentUserId: widget.currentUserId,
-                  ),
-                ),
-              );
+      body: BlocBuilder<ChatBloc, ChatState>(
+        builder: (context, state) {
+          if (state is ChatLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is ChatListLoaded) {
+            final chats = state.chats;
+            if (chats.isEmpty) {
+              return const Center(child: Text('No chats found.'));
             }
+            return ListView.builder(
+              itemCount: chats.length,
+              itemBuilder: (context, index) {
+                final chat = chats[index];
+                final displayName = chat.getName(widget.currentUserId);
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(
+                      displayName.isNotEmpty
+                          ? displayName.substring(0, 1).toUpperCase()
+                          : '?',
+                    ),
+                  ),
+                  title: Text(displayName.isNotEmpty ? displayName : 'Unknown'),
+                  subtitle: Text(chat.lastMessage ?? ''),
+                  trailing: (chat.unreadCount ?? 0) > 0
+                      ? CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.blue,
+                    child: Text(
+                      (chat.unreadCount ?? 0).toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  )
+                      : null,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatDetailScreen(
+                          chatId: chat.id,
+                          chatName: displayName.isNotEmpty ? displayName : 'Unknown',
+                          currentUserId: widget.currentUserId,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          } else if (state is ChatError) {
+            return Center(child: Text('Error: ${state.message}'));
+          } else {
+            return const SizedBox.shrink();
           }
         },
-        child: BlocBuilder<ChatBloc, ChatState>(
-          builder: (context, state) {
-            if (state is ChatLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is ChatListLoaded) {
-              final chats = state.chats;
-              return ListView.builder(
-                itemCount: chats.length,
-                itemBuilder: (context, index) {
-                  final chat = chats[index];
-                  final displayName = chat.getName(widget.currentUserId);
-                  return ListTile(
-                    leading: CircleAvatar(
-                      child: Text(
-                        displayName.isNotEmpty
-                            ? displayName.substring(0, 1).toUpperCase()
-                            : '?',
-                      ),
-                    ),
-                    title: Text(
-                        displayName.isNotEmpty ? displayName : 'Unknown'),
-                    subtitle: Text(chat.lastMessage ?? ''),
-                    trailing: (chat.unreadCount ?? 0) > 0
-                        ? CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Colors.blue,
-                      child: Text(
-                        (chat.unreadCount ?? 0).toString(),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    )
-                        : null,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatDetailScreen(
-                            chatId: chat.id,
-                            chatName: displayName.isNotEmpty
-                                ? displayName
-                                : 'Unknown',
-                            currentUserId: widget.currentUserId,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              );
-            } else if (state is ChatError) {
-              return Center(child: Text('Error: ${state.message}'));
-            } else {
-              return const SizedBox.shrink();
-            }
-          },
-        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showInitiateChatDialog(context),

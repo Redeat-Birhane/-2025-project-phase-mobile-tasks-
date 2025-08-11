@@ -31,7 +31,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void _sendMessage() {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
-      context.read<ChatBloc>().add(SendMessage(widget.chatId, text, 'text'));
+
+      final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+
+
+      context.read<ChatBloc>().add(
+        SendMessage(widget.chatId, text, 'text', tempId),
+      );
+
       _controller.clear();
     }
   }

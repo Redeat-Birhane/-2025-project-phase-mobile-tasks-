@@ -1,24 +1,37 @@
-import '../../../auth/domain/entities/user.dart';
-import 'chat.dart';
+enum MessageStatus { sending, sent, failed }
 
 class Message {
   final String id;
-  final User sender;
-  final Chat chat;
+  final String chatId;
   final String content;
-  final String type;
+  final String senderId;
+  final DateTime timestamp;
+  final MessageStatus status;
 
   Message({
     required this.id,
-    required this.sender,
-    required this.chat,
+    required this.chatId,
     required this.content,
-    required this.type,
+    required this.senderId,
+    required this.timestamp,
+    this.status = MessageStatus.sent,
   });
 
-  bool isMe(String currentUserId) {
-    return sender.id == currentUserId;
+  Message copyWith({
+    String? id,
+    MessageStatus? status,
+    String? content,
+    DateTime? timestamp,
+  }) {
+    return Message(
+      id: id ?? this.id,
+      chatId: chatId,
+      content: content ?? this.content,
+      senderId: senderId,
+      timestamp: timestamp ?? this.timestamp,
+      status: status ?? this.status,
+    );
   }
 
-
+  bool isMe(String currentUserId) => senderId == currentUserId;
 }

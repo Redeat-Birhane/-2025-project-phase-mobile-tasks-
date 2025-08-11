@@ -32,7 +32,6 @@ class UserListPage extends StatelessWidget {
                   title: Text(user.name ?? user.email),
                   subtitle: Text(user.email),
                   onTap: () {
-
                     context.read<ChatBloc>().add(InitiateChat(user.id));
                     Navigator.pop(context);
                   },
